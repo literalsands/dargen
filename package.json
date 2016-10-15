@@ -1,0 +1,7 @@
+{
+  "name": "genetic-experience-management",
+  "version": "0.0.1",
+  "scripts": {
+    "demo": "node demo.js"
+  }
+}
