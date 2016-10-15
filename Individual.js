@@ -1,156 +1,123 @@
-// GENETIC EXPERIENCE MANAGEMENT
-// by Paul Prae
-// First created December 5th, 2014
-// TODO: Unit Test thoroughly
-// TODO: Traits should probably be there own class
-// TODO: Learn how to override methods properly
-function Individual(numberOfTraits, possibleTraits, desiredTraits){
-	
-	// PROPERTIES
-	// TODO: Configuration file
-	var defaultPossibleTraits = new Array( "red", "blue", "yellow", "green", "turquoise", "purple", "orange", "brown", "black", "white");
-	var defaultDesiredTraits = new Array("turquoise", "purple");
-	var defaultNumberOfTraits = 3;
-	var defaultChanceOfMutation = 0.05;
+(function() {
+  "use strict";
+  // GENETIC EXPERIENCE MANAGEMENT
+  // by Paul Prae
+  // First created December 5th, 2014
+  // TODO: Unit Test thoroughly
+  // TODO: Traits should probably be there own class
+  // TODO: Learn how to override methods properly
 
-	this.numberOfTraits = typeof numberOfTraits !== 'undefined' ? numberOfTraits : defaultNumberOfTraits;
-	this.possibleTraits = typeof possibleTraits !== 'undefined' ? possibleTraits : defaultPossibleTraits;
-	this.desiredTraits = typeof desiredTraits !== 'undefined' ? desiredTraits : defaultDesiredTraits;
+  // PROPERTIES
+  // TODO: Configuration file
+  var defaultPossibleTraits = new Array( "red", "blue", "yellow", "green", "turquoise", "purple", "orange", "brown", "black", "white");
+  var defaultDesiredTraits = new Array("turquoise", "purple");
+  var defaultNumberOfTraits = 3;
+  var defaultChanceOfMutation = 0.05;
 
-	// TODO: Why do these need to be defined before it is called below? Can we avoid this? Clumsy with a function defined inside this too...
-	this.newTraits = function(){
+  class Individual {
 
-		var traits = new Array();
-		var getRandomInt = function(min, max) {
-	    	return Math.floor(Math.random() * (max - min + 1)) + min;
-		}
-		
-		for (var i = 0; i < this.numberOfTraits; i++) {
-			randomInt = getRandomInt(0, this.possibleTraits.length - 1);
-			traits.push(this.possibleTraits[randomInt]);
-		}
-
-		return traits;
-
-	}
-
-	this.traits = this.newTraits();
-	this.fitness = 0;
-
-	this.countDesiredTraits = function(desired){
-
-		var desiredTraits = typeof desired !== 'undefined' ? desired : defaultDesiredTraits;
-		var count = 0;
-
-		for (var i = 0; i < this.traits.length; i++) {
-			for (var j = 0; j < desiredTraits.length; j++) {
-				if (this.traits[i] == desiredTraits[j]){
-					count++;
-				}
-			}
-		}
-		return count;
-
-	}
-
-	// TODO: Something is redundant or this needs to be multiple methods
-	this.evaluate = function(desiredTraits){
-
-		var desiredTraits = typeof desiredTraits !== 'undefined' ? desiredTraits : defaultDesiredTraits;
-		fitness = this.countDesiredTraits();
-		this.fitness = fitness;
-		return fitness;
-
-	}
-
-	this.evaluate();
+    constructor(numberOfTraits = defaultNumberOfTraits,
+      possibleTraits = defaultPossibleTraits,
+      desiredTraits = defaultDesiredTraits) {
+      this.numberOfTraits = numberOfTraits;
+      this.possibleTraits = possibleTraits;
+      this.desiredTraits = desiredTraits;
+      this.traits = this.newTraits();
+      this.fitness = 0;
+      this.evaluate();
+    }
 
 
-	// GENETIC OPERATIONS
-	this.mutate = function(chance){
+    newTraits() {
 
-		var chance = typeof chance !== 'undefined' ? chance : defaultChanceOfMutation;
+      var traits = [];
+      function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
 
-		for (var i = 0; i < this.numberOfTraits; i++) {
-			if(Math.random() <= chance){
-				this.traits[i] = this.getRandomTrait();
-			}
-		}
+      for (let i = 0; i < this.numberOfTraits; i++) {
+        let randomInt = getRandomInt(0, this.possibleTraits.length - 1);
+        traits.push(this.possibleTraits[randomInt]);
+      }
 
-		this.evaluate();
+      return traits;
 
-		return this;
+    }
 
-	}
+    // TODO: Something is redundant or this needs to be multiple methods
+    evaluate(desiredTraits = defaultDesiredTraits) {
+      this.fitness = this.countDesiredTraits();
+      return this.fitness;
+    }
 
-	// HELPERS
-	this.getRandomInt = function(min, max) {
-    	return Math.floor(Math.random() * (max - min + 1)) + min;
-	}
 
-	this.getRandomTrait = function(){
-		randomInt = this.getRandomInt(0, this.possibleTraits.length - 1);
-		return this.possibleTraits[randomInt];
-	}
 
-	this.hasTrait = function(trait){
+    // GENETIC OPERATIONS
+    mutate(chance = defaultChanceOfMutation) {
 
-		for (var i = 0; i < this.traits.length; i++) {
-			if (this.traits[i] == trait){
-				return true;
-			}
-		}
-		return false;
+      for (let i = 0; i < this.numberOfTraits; i++) {
+        if(Math.random() <= chance){
+          this.traits[i] = this.getRandomTrait();
+        }
+      }
 
-	}
+      this.evaluate();
 
-	this.hasTraits = function(traits){
+      return this;
 
-		for (var i = 0; i < traits.length; i++) {
-			if (this.hasTrait(traits[i])){
-				return true;
-			}
-		}
-		return false;
+    }
 
-	}
+    // HELPERS
+    getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 
-	this.countDesiredTraits = function(desired){
+    getRandomTrait() {
+      var randomInt = this.getRandomInt(0, this.possibleTraits.length - 1);
+      return this.possibleTraits[randomInt];
+    }
 
-		var desiredTraits = typeof desired !== 'undefined' ? desired : defaultDesiredTraits;
-		var count = 0;
+    hasTrait(trait){
+      return this.traits.indexOf(trait) !== -1;
+    }
 
-		for (var i = 0; i < this.traits.length; i++) {
-			for (var j = 0; j < desiredTraits.length; j++) {
-				if (this.traits[i] == desiredTraits[j]){
-					count++;
-				}
-			}
-		}
-		return count;
+    hasTraits(traits){
 
-	}
+      for (let i = 0; i < traits.length; i++) {
+        if (this.hasTrait(traits[i])){
+          return true;
+        }
+      }
+      return false;
 
-	// PRINTS
-	this.prettyPrint = function(){
-		
-		console.log('\tTraits => ' + this.traitsToString());
-		console.log('\tFitness => ' + this.fitness);
+    }
 
-	}
+    countDesiredTraits(desiredTraits = defaultDesiredTraits) {
 
-	this.traitsToString = function(){
+      var count = 0;
 
-		var traits = '';
+      for (let i = 0; i < this.traits.length; i++) {
+        for (let j = 0; j < desiredTraits.length; j++) {
+          if (this.traits[i] == desiredTraits[j]){
+            count++;
+          }
+        }
+      }
+      return count;
 
-		for (var i = 0; i < this.numberOfTraits; i++) {
-			traits += this.traits[i] + ' ';
-		}
+    }
 
-		return traits;
+    // PRINTS
+    prettyPrint() {
+      console.log("Traits" + this.traitsToString());
+      console.log("Fitness" + this.fitness);
+    }
 
-	}
+    traitsToString() {
+      return this.traits.join(' ');
+    }
 
-}
+  }
 
-module.exports = Individual;
+  module.exports = Individual;
+})();

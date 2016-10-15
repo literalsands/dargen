@@ -1,110 +1,112 @@
+(function() {
+  "use strict";
+  class Genome {
+    /* Setup Genome using configuration object */
+    constructor(potentialGenes) {
+      this.potentialGenes = JSON.parse(potentialGenes);
+      this.names = Object.keys(potentialGenes);
+      this.count = Object.keys(potentialGenes).length;
+      this.genes = [];
+      // Initialize Genes
+      this.setRandomGenes();
+    }
+
+    /* Methods for initialization */
+
+    // NOTE: This distribution may not be completely random.
+    getRandomGene(name){
+
+      var values = this.potentialGenes[name];
+      return values[Math.floor(Math.random()*values.length)];
+
+    }
+
+    setRandomGene(name){
+
+      this.genes[name] = this.getRandomGene(name);
+
+    }
+
+    setRandomGenes(){
+
+      for (var i = 0; i < this.count; i++){
+
+        this.setRandomGene(this.names[i]);
+
+      }
+
+    }
 
 
-function Genome(genomeJSON){
+    /* More Getters and Setters */
 
-	/* Setup Genome using configuration object */
-	this.potentialGenes = JSON.parse(genomeJSON);
-	this.names = Object.keys(this.potentialGenes);
-	this.count = Object.keys(this.potentialGenes).length;
-	this.genes = new Array();
+    getGenes(){
+      return this.genes;
+    }
 
-	/* Methods for initialization */
+    getNames(){
+      return this.names;
+    }
 
-	// NOTE: This distribution may not be completely random.
-	this.getRandomGene = function(name){
+    getCount(){
+      return this.count;
+    }
 
-			var values = this.potentialGenes[name];
-			return values[Math.floor(Math.random()*values.length)];;
-		
-	}
+    /* Genetic operators */
 
-	this.setRandomGene = function(name){
+    mutate(chance){
 
-		this.genes[name] = this.getRandomGene(name);
+      for (var i = 0; i < this.count; i++){
 
-	}
+        if(Math.random() <= chance){
+          var name = this.names[i];
+          this.setRandomGene(name);
+        }
 
-	this.setRandomGenes = function(){
+      }
 
-		for (var i = 0; i < this.count; i++){
+    }
 
-			this.setRandomGene(this.names[i]);
+    /* Helper Methods */
 
-		}
+    hasGene(nameToMatch, valueToMatch){
 
-	}
+      if(this.names.indexOf(nameToMatch) > -1){
 
-	// Initialize Genes
-	this.setRandomGenes();
+        if(valueToMatch == this.genes[nameToMatch]){
+          return true;
+        }
 
-	/* More Getters and Setters */
+      }
+      return false;
 
-	this.getGenes = function(){
-		return this.genes;
-	}
+    }
 
-	this.getNames = function(){
-		return this.names;
-	}
-
-	this.getCount = function(){
-		return this.count;
-	}
-
-	/* Genetic operators */
-
-	this.mutate = function(chance){
-
-		for (var i = 0; i < this.count; i++){
-
-			if(Math.random() <= chance){
-				var name = this.names[i];
-				this.setRandomGene(name);
-			}
-
-		}
-
-	}
-
-	/* Helper Methods */
-
-	this.hasGene = function(nameToMatch, valueToMatch){
-
-		if(this.names.indexOf(nameToMatch) > -1){
-
-			if(valueToMatch == this.genes[nameToMatch]){
-				return true;
-			}
-
-		}
-		return false;
-
-	}
-
-	this.isEqual = function(genomeToMatch){
-		var namesToMatch = genomeToMatch.getNames();
-		var genesToMatch = genomeToMatch.getGenes();
-		for (var i = 0; i < genomeToMatch.getCount(); i++){
-			var nameToMatch = namesToMatch[i];
-			var valueToMatch = genesToMatch[nameToMatch];
-			if(!this.hasGene(nameToMatch, valueToMatch)){
-				return false;
-			}
-		}
-		return true;
-	}
+    isEqual(genomeToMatch){
+      var namesToMatch = genomeToMatch.getNames();
+      var genesToMatch = genomeToMatch.getGenes();
+      for (var i = 0; i < genomeToMatch.getCount(); i++){
+        var nameToMatch = namesToMatch[i];
+        var valueToMatch = genesToMatch[nameToMatch];
+        if(!this.hasGene(nameToMatch, valueToMatch)){
+          return false;
+        }
+      }
+      return true;
+    }
 
 
-	// Prints
-	this.printGenome = function(){
+    // Prints
+    printGenome(){
 
-		genes = this.genes
-		Object.keys(genes).forEach(function (key) {
-			console.log(key + ": " + genes[key]);
-		});
+      genes = this.genes;
+      Object.keys(genes).forEach(function (key) {
+        console.log(key + ": " + genes[key]);
+      });
 
-	}
+    }
 
-}
+  }
 
-module.exports = Genome;
+  module.exports = Genome;
+})();
