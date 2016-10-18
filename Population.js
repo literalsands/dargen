@@ -11,9 +11,9 @@
   var Individual = require('./Individual');
   var defaultPossibleTraits = ["red", "blue", "yellow", "green", "turquoise", "purple", "orange", "brown", "black", "white"];
   var defaultDesiredTraits = ["turquoise", "purple"];
-  var defaultNumberOfIndividuals = 10;
-  var defaultNumberOfTraits = 3;
-  var defaultChanceOfMutation = 0.05;
+  var defaultNumberOfIndividuals = 12;
+  var defaultNumberOfTraits = 12;
+  var defaultChanceOfMutation = 0.09;
 
   class Population {
     constructor(numberOfIndividuals = defaultNumberOfIndividuals,
@@ -64,6 +64,12 @@
 
       return nextGeneration;
 
+    }
+
+    evolveFromSelection(selection) {
+      this.lastGeneration = this.currentGeneration;
+      this.currentGeneration = this.mutateGeneration(defaultChanceOfMutation, this.crossoverGenerationWithIndividual(selection));
+      return this;
     }
 
     evaluate(desiredTraits = this.desiredTraits, generation = this.currentGeneration) {
@@ -134,6 +140,10 @@
 
     }
 
+    crossoverGenerationWithIndividual(mate) {
+      return this.currentGeneration.map((individual) => this.crossover(individual, mate));
+    }
+
     // TODO: Do a real crossover and prouce two children
     crossover(individual,
       mate = this.findRandomFitOrFitterIndividual(),
@@ -144,6 +154,12 @@
       crossoverPoint = typeof crossoverPoint !== 'undefined' ? crossoverPoint : Math.floor(individual.traits.length / 2);
 
       var child = new Individual();
+
+      if (Math.random() > 0.5) {
+        var hold = individual;
+        individual = mate;
+        mate = hold;
+      }
 
       for (var i = 0; i < child.traits.length; i++) {
         if(i < crossoverPoint){

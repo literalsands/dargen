@@ -11,7 +11,7 @@
   // TODO: Configuration file
   var defaultPossibleTraits = new Array( "red", "blue", "yellow", "green", "turquoise", "purple", "orange", "brown", "black", "white");
   var defaultDesiredTraits = new Array("turquoise", "purple");
-  var defaultNumberOfTraits = 3;
+  var defaultNumberOfTraits = 12;
   var defaultChanceOfMutation = 0.05;
 
   class Individual {
