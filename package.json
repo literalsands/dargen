@@ -1,18 +1,20 @@
 {
   "name": "Genetic",
   "version": "0.0.2",
-  "description": "Node.js on Docker",
+  "description": "Genetic Algorithm",
   "author": "Paul Prae <paul.prae@outlook.com>, Austin New <literalsands@gmail.com>",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "compile": "babel -d lib/ src/",
-    "prepublish": "npm run compile"
+    "compile": "./node_modules/.bin/babel -d dist/ src/",
+    "prepublish": "npm run compile",
+    "test": "./node_modules/.bin/mocha --compilers js:babel/register"
   },
   "dependencies": {
     "core-js": "^0.6.0"
-  }
-  "main": "lib/person.js",
+  },
   "devDependencies": {
-    "babel": "^4.6.0"
+    "babel": "^4.7.16",
+    "chai": "^3.5.0",
+    "mocha": "^3.1.2"
   }
 }
