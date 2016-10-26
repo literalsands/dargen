@@ -42,19 +42,17 @@ describe("Genome", () => {
       new Genome(parsedGenome).should.deep.equal(genome);
     })
   });
-  describe("length", () => {
+  describe("size", () => {
     it("truncates the array", () => {
       let genome = new Genome(2);
       expect(genome[1]).to.be.a('number');
-      console.log('call');
-      genome.length = 1;
+      genome.size = 1;
       expect(genome[1]).to.be.undefined;
     });
     it("fills the array with random values", () => {
       let genome = new Genome();
       expect(genome[0]).to.be.undefined;
-      console.log('call');
-      genome.length = 1;
+      genome.size = 1;
       expect(genome[0]).to.be.a('number');
     });
   });
@@ -80,7 +78,7 @@ describe("Genome", () => {
       var otherParentGenome = new Genome(2);
       var childGenome = parentGenome.crossover(otherParentGenome);
       parentGenome.should.not.deep.equal(otherParentGenome);
-      parentGenome.should.not.deep.equal(childGenome);
+      parentGenome.should.not.equal(childGenome);
     });
     it("produces a child composed of parent genes", () => {
       var parentGenome = new Genome(2);
@@ -92,8 +90,16 @@ describe("Genome", () => {
     });
   });
   describe("copy", () => {
-  });
-  describe("includes", () => {
+    it("is not the same object", () => {
+      var genome = new Genome(2);
+      var copiedGenome = genome.copy();
+      genome.should.not.equal(copiedGenome);
+    });
+    it("is equal to the original", () => {
+      var genome = new Genome(2);
+      var copiedGenome = genome.copy();
+      genome.should.deep.equal(copiedGenome);
+    });
   });
   describe("equals", () => {
   });

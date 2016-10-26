@@ -9,8 +9,7 @@ export class Genome extends Array {
   constructor(genes) {
     if (Number.isSafeInteger(genes) && genes > 0) {
       super();
-      this.length = genes;
-      this.fillRandom();
+      this.size = genes;
     } else if (Array.isArray(genes)) {
       super(...genes);
     } else {
@@ -22,16 +21,16 @@ export class Genome extends Array {
     return Math.random();
   }
 
-  get length() {
-    console.log("BACK");
-    return super.length;
+  get size() {
+    return this.length;
   }
 
-  set length(length) {
-    console.log("back");
+  set size(length) {
     let start = this.length;
-    super.length = length;
-    this.fillRandom(start, length - 1);
+    this.length = length;
+    if (start < length) {
+      this.fillRandom(start, length - 1);
+    }
   }
 
   toRandom(index) {
