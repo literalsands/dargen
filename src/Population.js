@@ -2,7 +2,7 @@
 // by Paul Prae
 // First created December 5th, 2014
 
-import Generation from './Generation';
+import { Generation } from './Generation';
 
 export class Population {
 

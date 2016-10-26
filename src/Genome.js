@@ -2,102 +2,90 @@
 // by Paul Prae
 // First created Janurary 3rd, 2015
 
-import getRandomInt from './helpers';
+import { getRandomInt } from './helpers';
 
-export class Genome {
+export class Genome extends Array {
 
-  constructor(genomeJSON) {
-    /* Setup Genome using configuration object */
-    // private variables
-    var potentialGenes = JSON.parse(genomeJSON);
-
-    // public variables
-    this.names = Object.keys(potentialGenes);
-    this.length = Object.keys(potentialGenes).length;
-    this.genes = new Object();
-    /* Initialization */
-    this.setRandomGenes();
-  }
-  get JSON() {
-    return JSON.stringify(this.genes, null, '\t');
-  }
-
-  getRandomGene(name){
-    var values = potentialGenes[name];
-    var index = getRandomInt(0, values.length);
-    return values[index];		
-  }
-
-  setRandomGene(name){
-    this.genes[name] = this.getRandomGene(name);
-  }
-
-  setRandomGenes(){
-    for (var i = 0; i < this.length; i++){
-      this.setRandomGene(this.names[i]);
+  constructor(genes) {
+    if (Number.isSafeInteger(genes) && genes > 0) {
+      super();
+      this.length = genes;
+      this.fillRandom();
+    } else if (Array.isArray(genes)) {
+      super(...genes);
+    } else {
+      super();
     }
+  }
+
+  getRandomGeneValue(){
+    return Math.random();
+  }
+
+  get length() {
+    console.log("BACK");
+    return super.length;
+  }
+
+  set length(length) {
+    console.log("back");
+    let start = this.length;
+    super.length = length;
+    this.fillRandom(start, length - 1);
+  }
+
+  toRandom(index) {
+    this[index] = this.getRandomGeneValue();
+    return this;
+  }
+
+  fillRandom(start = 0, stop = this.length - 1) {
+    for (let i = start; i < stop + 1; i++) {
+      this.toRandom(i);
+    }
+    return this;
   }
 
   /* Genetic operators */
-  mutate(rate){
+  // Method (Move, New), Rate, Copy
+  mutate({rate = 0.05, modify = true }) {
+    if (modify) {
+      var genome = this;
+    } else {
+      var genome = this.copy();
+    }
     for (var i = 0; i < this.length; i++) {
-      if(Math.random() <= rate){
-        var name = this.names[i];
-        this.setRandomGene(name);
+      if(Math.random() <= rate) {
+        genome.toRandom(i);
       } // end if
     } // end for
+    return genome;
   } // end mutate
 
   // Random chance any particular gene is from either parent.
-  crossover(mate){
-    var Child = new Genome(genomeJSON);
+  // Mate, Method (Mix, Pivot), Copy
+  // This might be better on a population level.
+  crossover(mate) {
+    var child = this.slice();
     // Duplicate this parent. Assuming the same species i.e. from the same config.
-    Child.copyGenes(this.genes);
-    var mateNames = mate.names;
-    var mateGenes = mate.genes;
     for (var i = 0; i < mate.length; i++){
-      if(Math.random() <= 0.5){
-        var nameToPass = mateNames[i];
-        var valueToPass = mateGenes[nameToPass];
-        Child.genes[nameToPass] = valueToPass;
+      if(Math.random() <= 0.5) {
+        child[i] = mate[i];
       }
     }
-    return Child;
+    return child;
   } // end crossover
 
   /* Helper Methods */
-  copyGenes(genesToCopy) {
-    var namesToCopy = Object.keys(genesToCopy);
-    var geneCount = Object.keys(genesToCopy).length; 
-    for (var i = 0; i < geneCount; i++){
-      var nameToCopy = namesToCopy[i];
-      this.genes[nameToCopy] = genesToCopy[nameToCopy];
-    } // end for
-  } // end copyGenes
+  copy() {
+    return new Genome(super.slice());
+  }
 
-  hasGene(nameToMatch, valueToMatch){
-    if(this.names.indexOf(nameToMatch) > -1){
-      if(valueToMatch == this.genes[nameToMatch]){
-        return true;
-      }
-    } // end if index exists
-    return false;
-  } // end hasGene
-
-  isEqual(genomeToMatch){
-    if (this.length != genomeToMatch.length) {
+  isEqual(genome){
+    if (this.length !== genome.length) {
       return false;
     }
-    var namesToMatch = genomeToMatch.names;
-    var genesToMatch = genomeToMatch.genes;
-    for (var i = 0; i < genomeToMatch.length; i++){
-      var nameToMatch = namesToMatch[i];
-      var valueToMatch = genesToMatch[nameToMatch];
-      if(!this.hasGene(nameToMatch, valueToMatch)){
-        return false;
-      } // end if not hasGene
-    } // end for
-    return true;
+    return this.every((value, index) => genome[index] === value);
   } // end isEqual
 
   // returns the percentage of genes that are the same
@@ -114,12 +102,6 @@ export class Genome {
     } // end for
     return geneMatchCount / this.length;
   } // end howSimilar
-
-
-  // Prints
-  print(){
-    console.log(this.JSON);
-  }
 
 } // end Genome
 
