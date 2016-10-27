@@ -4,9 +4,9 @@
 
 import Genome from './Genome';
 
-export class Individual{
+export class Individual {
 
-  constructor (individualJSON){
+  constructor (phenotype, genome) {
     var individualArray = JSON.parse(individualJSON);
     var genomeArray = individualArray['genome'];
     var genomeJSON = JSON.stringify(genomeArray);
@@ -34,6 +34,12 @@ export class Individual{
     individual['mutation'] = new Object();
     individual['mutation']['rate'] = this.mutationRate;
     return JSON.stringify(individual, null, '\t');
+  }
+
+  get fitness() {
+  }
+
+  set fitness(fitness) {
   }
 
   /* Genetic operators */

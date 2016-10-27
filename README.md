@@ -15,3 +15,17 @@ Selection and combination:
 
 Mutation:
 
+Population => Exploratory Strategy
+  Establish phenotype.
+    Establishes mutation strategy.
+    Establishes crossover strategy.
+  Establish gene alphabet.
+  Establish selection strategy.
+  Establish population parameters.
+Generations => Selection Strategy
+  Evaluation of Individuals in Generation
+Individuals => Crossover Strategy
+  Create traits using phenotype(genome).
+  Crossover strategy and mutation strategy are
+    characteristics of phenotype.
+Genomes => Mutation Strategy

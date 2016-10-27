@@ -43,11 +43,15 @@ describe("Genome", () => {
     })
   });
   describe("size", () => {
-    it("truncates the array", () => {
+    it("truncates the genome", () => {
       let genome = new Genome(2);
       expect(genome[1]).to.be.a('number');
       genome.size = 1;
       expect(genome[1]).to.be.undefined;
+    });
+    it("equals the length", () => {
+      let genome = new Genome(2);
+      genome.length.should.equal(genome.size);
     });
     it("fills the array with random values", () => {
       let genome = new Genome();
@@ -100,10 +104,6 @@ describe("Genome", () => {
       var copiedGenome = genome.copy();
       genome.should.deep.equal(copiedGenome);
     });
-  });
-  describe("equals", () => {
-  });
-  describe("howSimilar", () => {
   });
 })
 
