@@ -13,12 +13,22 @@ describe("Population", () => {
     it("takes an object as an argument", () => {
       (() => {
         new Population({
-          phenotype: (genome) => {},
-          selection: (generation) => {},
-          size: 200
+          // To Initialize individuals.
+          phenotype: (genome) => {
+          },
+          // To initialize generation.
+          strategies: {
+          },
+          size: 200,
+          selection: (population) => {},
+          removal: (population) => {},
+          mutation: (gene) => {},
+          crossover: (...genes) => {}
         });
       }).should.not.throw(Error);
     })
+    it("takes a population as an argument", () => {
+    });
     it("requires arguments", () => {
       (() => {
         new Population();
@@ -32,6 +42,8 @@ describe("Population", () => {
     });
   });
   describe("evolve", () => {
+    it("should apply selection and removal to create a new generation", () => {
+    });
     it("should create a new generation", () => {
     });
     it("should create new individuals", () => {

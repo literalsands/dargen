@@ -10,7 +10,7 @@ should();
 
 describe("Generation", () => {
   describe("constructor", () => {
-    it("", () => {
+    it("takes a generation", () => {
     });
   });
   describe("json", () => {
@@ -18,7 +18,7 @@ describe("Generation", () => {
   describe("evaluate", () => {
     it("takes a function", () => {
     });
-    it("should return a sortable builtin", () => {
+    it("should return a sortable builtin array", () => {
     });
     it("should return a promise", () => {
     });

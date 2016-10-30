@@ -3,11 +3,10 @@
 // First created Janurary 3rd, 2015
 
 import 'babel-polyfill';
-import chai from 'chai';
+import {should, expect} from 'chai';
 import { Genome } from '../src/Genome';
 
-chai.should();
-var expect = chai.expect;
+should();
 
 // A Genome is the set of genes of an individual.
 describe("Genome", () => {
@@ -62,46 +61,38 @@ describe("Genome", () => {
   });
   describe("mutate", () => {
     it("modifies the parent", () => {
-      var parentGenome = new Genome(2);
-      var copiedGenome = parentGenome.copy();
-      var mutatedGenome = parentGenome.mutate({rate: 1, modify: true});
+      let parentGenome = new Genome(2);
+      let copiedGenome = parentGenome.copy();
+      let mutatedGenome = parentGenome.mutate({rate: 1});
       parentGenome.should.not.deep.equal(copiedGenome);
       parentGenome.should.deep.equal(mutatedGenome);
     });
     it("does not modify the parent when asked", () => {
-      var parentGenome = new Genome(2);
-      var copiedGenome = parentGenome.copy();
-      var mutatedGenome = parentGenome.mutate({rate: 1, modify: false});
+      let parentGenome = new Genome(2);
+      let copiedGenome = parentGenome.copy();
+      let mutatedGenome = parentGenome.mutate({rate: 1, modify: false});
       parentGenome.should.deep.equal(copiedGenome);
       parentGenome.should.not.deep.equal(mutatedGenome);
     });
   });
   describe("crossover", () => {
     it("does not modify the parent", () => {
-      var parentGenome = new Genome(2);
-      var otherParentGenome = new Genome(2);
-      var childGenome = parentGenome.crossover(otherParentGenome);
-      parentGenome.should.not.deep.equal(otherParentGenome);
+      let parentGenome = new Genome(2);
+      let otherParentGenome = new Genome(2);
+      let childGenome = parentGenome.crossover({}, otherParentGenome);
+      parentGenome.should.not.deep.equal({}, otherParentGenome);
       parentGenome.should.not.equal(childGenome);
-    });
-    it("produces a child composed of parent genes", () => {
-      var parentGenome = new Genome(2);
-      var otherParentGenome = new Genome(2);
-      var childGenome = parentGenome.crossover(otherParentGenome);
-      var parentsGenome = parentGenome.concat(otherParentGenome);
-      childGenome.forEach((gene) =>
-        gene.should.be.oneOf(parentsGenome));
     });
   });
   describe("copy", () => {
     it("is not the same object", () => {
-      var genome = new Genome(2);
-      var copiedGenome = genome.copy();
+      let genome = new Genome(2);
+      let copiedGenome = genome.copy();
       genome.should.not.equal(copiedGenome);
     });
     it("is equal to the original", () => {
-      var genome = new Genome(2);
-      var copiedGenome = genome.copy();
+      let genome = new Genome(2);
+      let copiedGenome = genome.copy();
       genome.should.deep.equal(copiedGenome);
     });
   });
