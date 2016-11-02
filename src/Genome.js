@@ -64,7 +64,7 @@ export class Genome extends Array {
   // Random chance any particular gene is from either parent.
   // Mate, Method (Mix, Pivot), Copy
   // This might be better on a population level.
-  crossover(mate) {
+  crossover(options, mate) {
     var child = this.slice();
     // Duplicate this parent. Assuming the same species i.e. from the same config.
     for (var i = 0; i < mate.length; i++){

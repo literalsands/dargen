@@ -3,14 +3,14 @@
 // First created Janurary 3rd, 2015
 
 import 'babel-polyfill';
-import {should, expect} from 'chai';
+import {should, expect, config} from 'chai';
 import { Individual } from '../src/Individual';
 import { Genome } from '../src/Genome';
 
+config.includeStack = true;
 should();
 
 describe("Individual", () => {
-  let individual;
   describe("constructor", () => {
     it("doesn't requires arguments", () => {
       (() => {
@@ -24,6 +24,7 @@ describe("Individual", () => {
     });
   });
   describe("json", () => {
+    let individual;
     beforeEach(() => {
       individual = new Individual();
     });
@@ -40,14 +41,16 @@ describe("Individual", () => {
     })
   });
   describe("genome", () => {
+    let individual;
     beforeEach(() => {
       individual = new Individual();
     });
     it("should be a genome", () => {
-      individual.genome.is.a('Genome');
+      individual.genome.should.be.an.instanceof(Genome);
     });
   });
   describe("phenotype", () => {
+    let individual;
     beforeEach(() => {
       individual = new Individual({
         genome: new Genome(2)
@@ -56,7 +59,8 @@ describe("Individual", () => {
     it("should take a function", () => {
       (() => {
         individual.phenotype = (g) => {g};
-      }).to.not.throw(Error);
+      }).should.not.throw(Error);
+      expect(individual.traits).to.deep.equal(individual.genome);
     });
     it("should take an object of functions", () => {
       (() => {
@@ -64,15 +68,20 @@ describe("Individual", () => {
           copy: (g) => {g.copy()},
           reverse: (g) => {g.reverse()},
         }
-      }).to.not.throw(Error);
+      }).should.not.throw(Error);
+      expect(individual.traits).to.deep.equal({
+        copy: individual.genome,
+        reverse: individual.genome.reverse()
+      });
     });
     it("should take an array", () => {
       (() => {
         individual.phenotype = [
-          copy: (g) => {Math.floor(g * 100)},
-          reverse: (g) => {Math.floor(g * 100)},
-        ]
-      }).to.not.throw(Error);
+          (g) => {Math.floor(g * 50)},
+          (g) => {Math.floor(g * 100)},
+        ];
+      }).should.not.throw(Error);
+      expect(individual.traits).to.be.oneOf(individual.phenotype);
     });
     it("should take an array of arrays", () => {
       (() => {
@@ -80,7 +89,8 @@ describe("Individual", () => {
           ['magenta', 'cyan', 'yellow'],
           ['serif', 'sans-serif'],
         ]
-      }).to.not.throw(Error);
+      }).should.not.throw(Error);
+      expect(individual.traits).to.be.oneOf(individual.phenotype);
     });
     it("should take an object of arrays and functions", () => {
       individual.genome.size = 4;
@@ -88,6 +98,8 @@ describe("Individual", () => {
         color: (g) => {`rgb(${g.join()})`},
         fontStyle: ['serif', 'sans-serif'],
       }
+      expect(individual.traits.color).to.be.a('string');
+      expect(individual.traits.fontStyle).to.be.oneOf(individual.phenotype.fontStyle);
     });
     it("should take an object of arrays", () => {
       (() => {
@@ -95,12 +107,14 @@ describe("Individual", () => {
           color: ['magenta', 'cyan', 'yellow'],
           fontStyle: ['serif', 'sans-serif'],
         }
-      }).to.not.throw(Error);
+      }).should.not.throw(Error);
+      expect(individual.traits.color).to.be.oneOf(individual.phenotype.color);
+      expect(individual.traits.fontStyle).to.be.oneOf(individual.phenotype.fontStyle);
     });
     it("should take an object of arrays", () => {
       (() => {
         individual.phenotype = {
-          mutation: {
+          mutate: {
             substitution: 1,
             rate: (g) => {1},
             min: (g) => {0.1},
@@ -110,147 +124,161 @@ describe("Individual", () => {
             inversion: 1,
           }
         }
-      }).to.not.throw(Error);
+      }).should.not.throw(Error);
+      expect(individual.traits.mutate).to.be.an('object');
+      expect(individual.traits.deletion).to.equal(1);
+      expect(individual.traits.rate).to.equal(1);
     });
-    describe("traits", () => {
-      beforeEach(() => {
-        individual = new Individual();
-      });
-      it("should return an object", () => {
-        individual.traits.should.be.an('object');
-      });
-      it("should return genome if no phenotype is set", () => {
-        individual.traits.should.be.a('Genome');
-      });
-      it("should always return the same value for the same genome", () => {
-        let otherIndividual = new Individual({genome: genome.copy()});
-        otherIndividual.traits.should.deep.equal(individual.traits);
-      });
+  });
+  describe("traits", () => {
+    let individual;
+    beforeEach(() => {
+      individual = new Individual();
     });
-    describe("evaluate", () => {
-      beforeEach(() => {
-        individual = new Individual();
-      });
-      it("should take a function", () => {
-        (() => {
-          individual.evaluate((traits) => {
-            traits.reduce((sum, value) => {
-              sum + value
-            }, 0);
-          });
-        }).should.not.throw(Error);
-      });
+    it("should return genome if no phenotype is set", () => {
+      expect(individual.traits).to.be.an.instanceof(Genome);
     });
-    describe("identifier", () => {
-      beforeEach(() => {
-        individual = new Individual();
-      });
-      it("should be a string", () => {
-        individual.identifier.should.be.a('string');
-      });
-      it("should be unique to genome", () => {
-        let otherIndividual = new Individual();
-        individual.identifer.should.not.equal(otherIndividual.identifier);
-      });
+    it("should always return the same value for the same genome", () => {
+      let otherIndividual = new Individual({genome: individual.genome.copy()});
+      expect(otherIndividual.traits).to.deep.equal(individual.traits);
     });
-    describe("parents", () => {
-      beforeEach(() => {
-        individual = new Individual();
-      });
-      it("should be an array of strings when parented", () => {
-        let child = individual.crossover(individual);
-        child.parents.should.be.an('array');
-        child.parents[0].should.equal(individual.identifier);
-        child.parents[1].should.equal(individual.identifier);
-      });
-      it("should be undefined when not parented", () => {
-        expect(individual.parents).to.be.undefined;
-      });
+  });
+  describe("evaluate", () => {
+    let individual;
+    beforeEach(() => {
+      individual = new Individual();
     });
-    describe("timestamp", () => {
-      beforeEach(() => {
-        individual = new Individual();
-      });
-      it("should be a datetime", () => {
-        individual.timestamp.should.be.a('date');
-      });
-      it("should be a recent datetime", () => {
-        let recentDate = new Date();
-        recentDate.setDate(recentDate.getDate() - 1);
-        individual.timestamp.should.be.above(recentDate);
-      });
-      it("should not be in the future", () => {
-        individual.timestamp.should.be.below(new Date())
-      });
+    it("should take a function", () => {
+      (() => {
+        individual.evaluate((traits) => {
+          traits.reduce((sum, value) => {
+            sum + value
+          }, 0);
+        });
+      }).should.not.throw(Error);
     });
-    describe("generation", () => {
-      beforeEach(() => {
-        individual = new Individual();
-      });
-      it("should be a number", () => {
-        individual.generation.should.be.a('number');
-      });
+  });
+  describe("identifier", () => {
+    let individual;
+    beforeEach(() => {
+      individual = new Individual();
     });
-    describe("population", () => {
-      beforeEach(() => {
-        individual = new Individual();
-      });
-      it("should be a unique string", () => {
-        individual.population.should.be.a('string');
-      });
+    it("should be a string", () => {
+      expect(individual.identifier).to.be.a('string');
     });
-    describe("mutate", () => {
-      beforeEach(() => {
-        individual = new Individual();
-      });
-      it("should have a default function", () => {
-        individual.mutate.should.not.throw(Error);
-      });
-      it("should be overriden by phenotype", () => {
-        individual.phenotype = {
-          mutation: {
-            rate: (g) => {g[2]},
-            min: (g) => {g[1]},
-            max: (g) => {g[0]}
-          }
+    it("should be unique to genome", () => {
+      let otherIndividual = new Individual();
+      expect(individual.identifer).to.not.equal(otherIndividual.identifier);
+    });
+  });
+  describe("parents", () => {
+    let individual;
+    beforeEach(() => {
+      individual = new Individual();
+    });
+    it("should be an array of strings when parented", () => {
+      let child = individual.crossover(individual);
+      child.parents.should.be.an('array');
+      child.parents[0].should.equal(individual.identifier);
+      child.parents[1].should.equal(individual.identifier);
+    });
+    it("should be undefined when not parented", () => {
+      expect(individual.parents).to.be.undefined;
+    });
+  });
+  describe("timestamp", () => {
+    let individual;
+    beforeEach(() => {
+      individual = new Individual();
+    });
+    it("should be a datetime", () => {
+      individual.timestamp.should.be.a('date');
+    });
+    it("should be a recent datetime", () => {
+      let recentDate = new Date();
+      recentDate.setDate(recentDate.getDate() - 1);
+      individual.timestamp.should.be.above(recentDate);
+    });
+    it("should not be in the future", () => {
+      // Add 1 "should be below or equal to"
+      individual.timestamp.getTime().should.be.below(new Date().getTime() + 1)
+    });
+  });
+  describe("generation", () => {
+    let individual;
+    beforeEach(() => {
+      individual = new Individual();
+    });
+    it("should be a number", () => {
+      individual.generation.should.be.a('number');
+    });
+  });
+  describe("population", () => {
+    let individual;
+    beforeEach(() => {
+      individual = new Individual();
+    });
+    it("should be a unique string", () => {
+      expect(individual.population).to.be.a('string');
+    });
+  });
+  describe("mutate", () => {
+    let individual;
+    beforeEach(() => {
+      individual = new Individual();
+    });
+    it("should have a default function", () => {
+      (() => {
+        individual.mutate();
+      }).should.not.throw(Error);
+    });
+    it("should be overriden by phenotype", () => {
+      individual.phenotype = {
+        mutate: {
+          rate: (g) => {return g[2]},
+          min: (g) => {return g[1]},
+          max: (g) => {return g[0]}
         }
-        individual.mutate.should.not.throw(Error);
-      });
+      }
+      (() => {
+        individual.mutate();
+      }).should.not.throw(Error);
     });
-    describe("crossover", () => {
-      beforeEach(() => {
-        individual = new Individual();
-      });
-      it("takes an individual", () => {
-        let otherIndividual = new Individual()
-        individual.crossover(otherIndividual)
-      });
-      it("takes many individuals", () => {
-        let individual0 = new Individual()
-        let individual1 = new Individual()
-        individual.crossover(individual0, individual1);
-      });
-      it("produces a child composed of parent genes", () => {
-        let parentIndividual = new Individual(2);
-        let otherParentIndividual = new Individual(2);
-        let childIndividual = parentIndividual.crossover(otherParentIndividual);
-        let parentsIndividual = parentIndividual.concat(otherParentIndividual);
-        childIndividual.genome.forEach((gene) =>
-          gene.should.be.oneOf(parentsIndividual.genome));
-      });
+  });
+  describe("crossover", () => {
+    let individual;
+    beforeEach(() => {
+      individual = new Individual();
     });
-    describe("copy", () => {
-      beforeEach(() => {
-        individual = new Individual();
-      });
-      it("is not the same object", () => {
-        let individual = new Indvidual(2);
-        let copiedIndvidual = individual.copy();
-        individual.should.not.equal(copiedIndvidual);
-      });
-      it("is equal to the original", () => {
-        let individual = new Indvidual(2);
-        let copiedIndvidual = individual.copy();
-        individual.should.deep.equal(copiedIndvidual);
-      });
+    it("takes an individual", () => {
+      let otherIndividual = new Individual()
+      individual.crossover(otherIndividual)
     });
+    it("takes many individuals", () => {
+      let individual0 = new Individual()
+      let individual1 = new Individual()
+      individual.crossover(individual0, individual1);
+    });
+    it("produces a child composed of parent genes", () => {
+      let parentIndividual = new Individual();
+      let otherParentIndividual = new Individual();
+      let childIndividual = parentIndividual.crossover(otherParentIndividual);
+      let parentsGenes = [parentIndividual].concat(otherParentIndividual).reduce(
+        (genes, { genome }) => { return genes.concat(genome); }, []);
+      childIndividual.genome.forEach((gene) =>
+        gene.should.be.oneOf(parentsGenes));
+    });
+    it("should be overriden by phenotype", () => {
+      individual.phenotype = {
+        crossover: {
+          rate: (g) => {g[2]},
+          min: (g) => {g[1]},
+          max: (g) => {g[0]}
+        }
+      }
+      (() => {
+        individual.crossover();
+      }).should.not.throw(Error);
+    });
+  });
+});

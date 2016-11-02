@@ -2,66 +2,128 @@
 // by Paul Prae
 // First created December 5th, 2014
 
-import Genome from './Genome';
+import { Genome } from './Genome';
+import uuid from 'node-uuid';
+let { v4: getIdentifier } = uuid;
 
 export class Individual {
 
-  constructor (phenotype, genome) {
-    var individualArray = JSON.parse(individualJSON);
-    var genomeArray = individualArray['genome'];
-    var genomeJSON = JSON.stringify(genomeArray);
-    var fitnessArray = individualArray['fitness'];
-    var fittestGenomeJSON = JSON.stringify(fitnessArray['fittestGenome']);
-    var mutationArray = individualArray['mutation'];
+  constructor (options = {}) {
+    let phenotype;
+    ({
+      genome: this.genome = new Genome(1),
+      generation: this.generation = 0,
+      population: this.population = "orphan",
+      parents: this.parents,
+      identifier: this.identifier,
+      timestamp: this.timestamp = new Date(),
+      identifier: this.identifier = getIdentifier(),
+      phenotype,
+    } = options);
 
-    // public variables
-    this.genome = new Genome(genomeJSON);
-    this.fittestGenome = new Genome(fittestGenomeJSON);
-    this.mutationRate = mutationArray['rate'];
-    this.fitness = 0;
-    /* Initialization */
-    this.evaluate();
-
+    if (!this.genome instanceof Genome) {
+      this.genome = new Genome(this.genome);
+    }
+    if (!this.timestamp instanceof Date) {
+      this.timestamp = new Date(this.timestamp);
+    }
+    if (phenotype !== undefined) {
+      this.phenotype = phenotype;
+    }
   }
+
+  // It looks like a Phenotype runner could be its own object or factory.
+  _phenotype_array(arr, array_index) {
+    // Return corresponding array value and increment counter.
+    return arr[Math.floor(arr.length * this.genome[array_index])];
+  }
+  _phenotype_function(func, array_total = this._phenotype_number_of_arrays) {
+    // Call function with Genome. Supply when array genes stop.
+    let ret = func(this.genome, array_total);
+    console.log(ret, func, this.genome, array_total);
+    return ret;
+  }
+  _phenotype_object(obj, array_index) {
+    let ret = {};
+    for (let key in obj) {
+      ret[key] = this._phenotype_node(obj[key], array_index);
+      console.log(ret, obj[key], this._phenotype_node(obj[key], array_index));
+      if (Array.isArray(obj[key])) { array_index += 1; }
+    }
+    return ret;
+  }
+  _phenotype_node(value, array_index) {
+    if (Array.isArray(value)) {
+      console.log("Array");
+      return this._phenotype_array(value, array_index);
+    } else if (value instanceof Function) {
+      console.log("Function");
+      return this._phenotype_function(value, array_index);
+    } else if (value instanceof Object) {
+      console.log("Object");
+      return this._phenotype_object(value);
+    } else {
+      console.log("Value");
+      return value;
+    }
+  }
+  _phenotype() {return this._phenotype_node(this._phenotype_manifest, 0);}
+  // Standard phenotype is just Genome.
+  _phenotype_manifest(o) {return o;}
+  _phenotype_count_arrays (value, arrays = 0) {
+    if (Array.isArray(value)) {
+      return 1;
+    } else if (value instanceof Object) {
+      for (let key in value) {
+        arrays += this._phenotype_count_arrays(value[key]);
+      }
+      return arrays;
+    }
+    return 0;
+  }
+
+  set phenotype (phenotype) {
+    let arrays = this._phenotype_count_arrays(phenotype);
+    // Create genome minimum for arrays.
+    if (this.genome.size < arrays) {
+      this.genome.size = arrays;
+    }
+    this._phenotype_manifest = phenotype;
+  }
+
+  get phenotype() {
+    return this._phenotype_manifest;
+  }
+
   /* Setup Individual using configuration object */
   // private variables
 
-  get JSON() {
-    var individual = new Object();
-    individual['Genome'] = this.genome.genes;
-    individual['fitness'] = new Object();
-    individual['fitness']['value'] = this.fitness;
-    individual['mutation'] = new Object();
-    individual['mutation']['rate'] = this.mutationRate;
-    return JSON.stringify(individual, null, '\t');
+  get traits() {
+    return this._phenotype();
   }
 
-  get fitness() {
-  }
-
-  set fitness(fitness) {
+  evaluate(func) {
+    return func(this.traits);
   }
 
   /* Genetic operators */
-  evaluate(){
-    this.fitness = this.genome.howSimilar(this.fittestGenome);
+
+  mutate() {
+    console.log(this.traits, this.traits.mutate);
+    this.genome.mutate(this.traits.mutate);
+    return this;
   }
 
-  mutate(){
-    this.genome.mutate(this.mutationRate);
-    this.evaluate();
-  }
-
-  crossover(mate){
-    var Child = new Individual(individualJSON);
-    Child.genome = this.genome.crossover(mate.genome);
-    Child.evaluate();
-    return Child;
-  }
-
-  /* Helpers */
-  print(){
-    console.log(this.JSON);
+  crossover(...mates) {
+    var childGenome = this.genome.crossover(this.traits.crossover, mates);
+    return new Individual({
+      genome: childGenome,
+      phenotype: this.phenotype,
+      parents: mates.reduce((parents, mate) => {
+        parents.push(mate.identifier);
+        return parents;
+      }, [this.identifier]),
+    });
   }
 
 }
