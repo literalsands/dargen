@@ -15,7 +15,6 @@ export class Individual {
       generation: this.generation = 0,
       population: this.population = "orphan",
       parents: this.parents,
-      identifier: this.identifier,
       timestamp: this.timestamp = new Date(),
       identifier: this.identifier = getIdentifier(),
       phenotype,
@@ -33,37 +32,31 @@ export class Individual {
   }
 
   // It looks like a Phenotype runner could be its own object or factory.
-  _phenotype_array(arr, array_index) {
+  _phenotype_array(arr, array_index=0) {
     // Return corresponding array value and increment counter.
     return arr[Math.floor(arr.length * this.genome[array_index])];
   }
   _phenotype_function(func, array_total = this._phenotype_number_of_arrays) {
     // Call function with Genome. Supply when array genes stop.
     let ret = func(this.genome, array_total);
-    console.log(ret, func, this.genome, array_total);
     return ret;
   }
-  _phenotype_object(obj, array_index) {
-    let ret = {};
+  _phenotype_object(obj, array_index=0) {
+    var ret = {};
     for (let key in obj) {
       ret[key] = this._phenotype_node(obj[key], array_index);
-      console.log(ret, obj[key], this._phenotype_node(obj[key], array_index));
       if (Array.isArray(obj[key])) { array_index += 1; }
     }
     return ret;
   }
   _phenotype_node(value, array_index) {
     if (Array.isArray(value)) {
-      console.log("Array");
       return this._phenotype_array(value, array_index);
     } else if (value instanceof Function) {
-      console.log("Function");
       return this._phenotype_function(value, array_index);
     } else if (value instanceof Object) {
-      console.log("Object");
       return this._phenotype_object(value);
     } else {
-      console.log("Value");
       return value;
     }
   }
@@ -109,13 +102,13 @@ export class Individual {
   /* Genetic operators */
 
   mutate() {
-    console.log(this.traits, this.traits.mutate);
     this.genome.mutate(this.traits.mutate);
     return this;
   }
 
   crossover(...mates) {
-    var childGenome = this.genome.crossover(this.traits.crossover, mates);
+    var childGenome = this.genome.crossover(this.traits.crossover, ...mates);
+    // How do we decide the new generation? This might need to be called again, higher up.
     return new Individual({
       genome: childGenome,
       phenotype: this.phenotype,

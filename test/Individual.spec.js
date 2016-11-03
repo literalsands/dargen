@@ -58,27 +58,27 @@ describe("Individual", () => {
     });
     it("should take a function", () => {
       (() => {
-        individual.phenotype = (g) => {g};
+        individual.phenotype = (g => g);
       }).should.not.throw(Error);
       expect(individual.traits).to.deep.equal(individual.genome);
     });
     it("should take an object of functions", () => {
       (() => {
         individual.phenotype = {
-          copy: (g) => {g.copy()},
-          reverse: (g) => {g.reverse()},
+          copy: (g => g.copy()),
+          reverse: (g => g.copy().reverse()),
         }
       }).should.not.throw(Error);
       expect(individual.traits).to.deep.equal({
         copy: individual.genome,
-        reverse: individual.genome.reverse()
+        reverse: individual.genome.copy().reverse()
       });
     });
     it("should take an array", () => {
       (() => {
         individual.phenotype = [
-          (g) => {Math.floor(g * 50)},
-          (g) => {Math.floor(g * 100)},
+          (g => Math.floor(g * 50)),
+          (g => Math.floor(g * 100)),
         ];
       }).should.not.throw(Error);
       expect(individual.traits).to.be.oneOf(individual.phenotype);
@@ -95,7 +95,7 @@ describe("Individual", () => {
     it("should take an object of arrays and functions", () => {
       individual.genome.size = 4;
       individual.phenotype = {
-        color: (g) => {`rgb(${g.join()})`},
+        color: (g => `rgb(${g.join()})`),
         fontStyle: ['serif', 'sans-serif'],
       }
       expect(individual.traits.color).to.be.a('string');
@@ -111,23 +111,28 @@ describe("Individual", () => {
       expect(individual.traits.color).to.be.oneOf(individual.phenotype.color);
       expect(individual.traits.fontStyle).to.be.oneOf(individual.phenotype.fontStyle);
     });
-    it("should take an object of arrays", () => {
+    it("should take a nested object", () => {
       (() => {
         individual.phenotype = {
           mutate: {
-            substitution: 1,
-            rate: (g) => {1},
-            min: (g) => {0.1},
-            max: (g) => {0.4},
-            deletion: 1,
-            duplication: 1,
-            inversion: 1,
+            rate: (g => 0.1),
+            min: (g => 0.2),
+            max: (g => 0.3),
+            substitution: [0.4, 0.8, 1],
+            deletion: 0.5,
+            duplication: 0.6,
+            inversion: 0.7
           }
-        }
+        };
       }).should.not.throw(Error);
       expect(individual.traits.mutate).to.be.an('object');
-      expect(individual.traits.deletion).to.equal(1);
-      expect(individual.traits.rate).to.equal(1);
+      expect(individual.traits.mutate.deletion).to.equal(0.5);
+      expect(individual.traits.mutate.min).to.equal(0.2);
+      expect(individual.traits.mutate.max).to.equal(0.3);
+      expect(individual.traits.mutate.rate).to.equal(0.1);
+      expect(individual.traits.mutate.inversion).to.equal(0.7);
+      expect(individual.traits.mutate.duplication).to.equal(0.6);
+      expect(individual.traits.mutate.substitution).to.be.oneOf(individual.phenotype.mutate.substitution);
     });
   });
   describe("traits", () => {
@@ -235,11 +240,11 @@ describe("Individual", () => {
     it("should be overriden by phenotype", () => {
       individual.phenotype = {
         mutate: {
-          rate: (g) => {return g[2]},
-          min: (g) => {return g[1]},
-          max: (g) => {return g[0]}
+          rate: (g => g[2]),
+          min: (g => g[1]),
+          max: (g => g[0])
         }
-      }
+      };
       (() => {
         individual.mutate();
       }).should.not.throw(Error);
@@ -251,12 +256,12 @@ describe("Individual", () => {
       individual = new Individual();
     });
     it("takes an individual", () => {
-      let otherIndividual = new Individual()
-      individual.crossover(otherIndividual)
+      let otherIndividual = new Individual();
+      individual.crossover(otherIndividual);
     });
     it("takes many individuals", () => {
-      let individual0 = new Individual()
-      let individual1 = new Individual()
+      let individual0 = new Individual();
+      let individual1 = new Individual();
       individual.crossover(individual0, individual1);
     });
     it("produces a child composed of parent genes", () => {
@@ -265,20 +270,19 @@ describe("Individual", () => {
       let childIndividual = parentIndividual.crossover(otherParentIndividual);
       let parentsGenes = [parentIndividual].concat(otherParentIndividual).reduce(
         (genes, { genome }) => { return genes.concat(genome); }, []);
-      childIndividual.genome.forEach((gene) =>
-        gene.should.be.oneOf(parentsGenes));
+      childIndividual.genome.forEach(gene => gene.should.be.oneOf(parentsGenes));
     });
     it("should be overriden by phenotype", () => {
       individual.phenotype = {
         crossover: {
-          rate: (g) => {g[2]},
-          min: (g) => {g[1]},
-          max: (g) => {g[0]}
+          rate: (g => g[2]),
+          min: (g => g[1]),
+          max: (g => g[0])
         }
-      }
-      (() => {
-        individual.crossover();
-      }).should.not.throw(Error);
+      };
+      let otherIndividual = new Individual();
+      individual.genome.size = 3;
+      (() => individual.crossover(otherIndividual)).should.not.throw(Error);
     });
   });
 });

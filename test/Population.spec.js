@@ -14,16 +14,12 @@ describe("Population", () => {
       (() => {
         new Population({
           // To Initialize individuals.
-          phenotype: (genome) => {
-          },
+          phenotype: (genome) => { },
           // To initialize generation.
-          strategies: {
-          },
+          strategies: { },
           size: 200,
           selection: (population) => {},
-          removal: (population) => {},
-          mutation: (gene) => {},
-          crossover: (...genes) => {}
+          removal: (population) => {}
         });
       }).should.not.throw(Error);
     })

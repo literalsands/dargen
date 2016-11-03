@@ -63,16 +63,41 @@ describe("Genome", () => {
     it("modifies the parent", () => {
       let parentGenome = new Genome(2);
       let copiedGenome = parentGenome.copy();
-      let mutatedGenome = parentGenome.mutate({rate: 1});
+      let mutatedGenome = parentGenome.mutate({substitution: 1});
       parentGenome.should.not.deep.equal(copiedGenome);
       parentGenome.should.deep.equal(mutatedGenome);
     });
     it("does not modify the parent when asked", () => {
       let parentGenome = new Genome(2);
       let copiedGenome = parentGenome.copy();
-      let mutatedGenome = parentGenome.mutate({rate: 1, modify: false});
+      let mutatedGenome = parentGenome.mutate({substitution: 1, modify: false});
       parentGenome.should.deep.equal(copiedGenome);
       parentGenome.should.not.deep.equal(mutatedGenome);
+    });
+    it("provides substitution", () => {
+      let genome = new Genome(2);
+      let copiedGenome = genome.copy();
+      genome.mutate({substitution: 1});
+      genome.should.not.deep.equal(copiedGenome);
+    });
+    it("provides duplication", () => {
+      let genome = new Genome(2);
+      genome.mutate({duplication: 1, substitution: 0});
+      genome.size.should.equal(4);
+      genome[0].should.equal(genome[2]);
+      genome[1].should.equal(genome[3]);
+    });
+    it("provides inverse", () => {
+      let genome = new Genome(2);
+      let genomeCopy = genome.copy();
+      genome.mutate({inversion: 1, substitution: 0});
+      genome.size.should.equal(2);
+      genome.should.deep.equal(genomeCopy.reverse());
+    });
+    it("provides deletion", () => {
+      let genome = new Genome(2);
+      genome.mutate({deletion: 1, substitution: 0});
+      genome.size.should.equal(0);
     });
   });
   describe("crossover", () => {
@@ -82,6 +107,19 @@ describe("Genome", () => {
       let childGenome = parentGenome.crossover({}, otherParentGenome);
       parentGenome.should.not.deep.equal({}, otherParentGenome);
       parentGenome.should.not.equal(childGenome);
+    });
+    it("should take multiple parents", () => {
+      let genomeA = new Genome(4);
+      let genomeB = new Genome(2);
+      let genomeC = new Genome(3);
+      let childGenome;
+      (() => {
+        childGenome = genomeA.crossover({crossover: 1}, genomeB, genomeC);
+      }).should.not.throw(Error);
+      childGenome[0].should.be.oneOf([genomeB[0], genomeC[0]]);
+      childGenome[1].should.be.oneOf([genomeB[1], genomeC[1]]);
+      childGenome[2].should.be.oneOf([genomeC[2], genomeA[2]]);
+      childGenome[3].should.be.oneOf([genomeA[3]]);
     });
   });
   describe("copy", () => {
