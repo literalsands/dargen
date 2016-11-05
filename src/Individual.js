@@ -12,11 +12,11 @@ export class Individual {
     let phenotype;
     ({
       genome: this.genome = new Genome(1),
-      generation: this.generation = 0,
-      population: this.population = "orphan",
       parents: this.parents,
+      // generation: this.generation
+      // population: this.population
       timestamp: this.timestamp = new Date(),
-      identifier: this.identifier = getIdentifier(),
+      identifier: this.identifier = `i-${getIdentifier()}`,
       phenotype,
     } = options);
 

@@ -4,121 +4,110 @@
 
 import Individual from './Individual';
 import getRandomInt from './helpers';
+import uuid from 'node-uuid';
+let { v4: getIdentifier } = uuid;
 
+// Holds a population or individuals at a certain iteration.
 export class Generation {
 
-  constructor(generationJSON) {
-    /* Setup Generation using configuration object */
-    // private variables
-    var generationArray = JSON.parse(generationJSON);
-    var individualArray = generationArray['individual'];
-    var individualJSON = JSON.stringify(individualArray);
+  constructor(options, ...populations) {
+    ({
+      // Save this generation's population as a copy.
+      selection: this.selection = this._selection,
+      removal: this.removal = this._removal,
 
-    // public variables
-    this.numberOfIndividuals = generationArray['numberOfIndividuals'];
-    this.individuals = new Array();
+      // Fitness function must be defined by the user.
+      fitness: this.fitness,
+      comparison: this.comparison = this._comparision,
 
-  }
-  /* Methods for initialization */
-  createIndividuals(amount) {
-    if (!amount) amount = this.numberOfIndividuals;
-    if (amount < 1) amount = 1;
-    for (var i = 0; i < amount; i++) {
-      this.individuals.push(new Individual(individualJSON));
+      population: this.population,
+      identifier: this.identifier = `g-${getIdentifier()}`
+    } = options);
+    if (popluations.length) {
+      // Make a temporary population to evolve multiple populations with.
+      this.population = new Population({
+        individuals: populations.reduce(((is, p) => is.concat(p.individuals), []))
+      });
     }
   }
 
-  /* The state of the generation */
-  get averageFitness() {
-    var totalFitness = 0;
-    for (var i = 0; i < this.individuals.length; i++) {
-      totalFitness += this.individuals[i].fitness;
-    }
-    return totalFitness / this.individuals.length;
+  _generation() {
+    let groups = this._groups().map(this._tournament);
+    let elite = groups.map(this._selection());
+    // Should the groups and ranks be saved somewhere?
+    let childGroups = elite.map(
+      (leet, i) => groups.map(
+        individual => crossover(...leet)));
+    let childIndividuals = childGroups.reduce(
+      (individuals, group => individuals.concat(group)), []
+    );
+    // Mutated Offspring of Non-elite and Elite.
+    return childIndividuals.map(individual => individual.mutate());
   }
 
-  // Returns the most fit individuals as an array
-  findFittest(amount){
-    this.sort();
-    return this.individuals.reverse().slice(0, amount);
-  }
-  // Returns the top X% of the most fit individuals as an array
-  // Takes in the ratio percentage (e.g. 0.9 for 90 percent)
-  findTopPercent(decimal) {
-    var fittestAmount = Math.ceil(decimal * this.numberOfIndividuals);
-    return this.findFittest(fittestAmount);
+  // Given an ordered group, choose which individuals will mate with the rest of the group.
+  _selection(group) {
+    // Return only the top performing member.
+    return [group[0]];
   }
 
-  findWeakest(amount) {
-    this.sort();
-    return this.individuals.slice(0, amount);
+  // Given the current population, determine which will be saved for the next generation.
+  _removal(population) {
+    // Save none of the past generation of individuals.
+    return [];
   }
 
-  /* Genetic Operators */
-  mutate(){
-    for (var i = 0; i < this.individuals.length; i++) {
-      this.individuals[i].mutate();
-    }
+  _chooseAndSplice(array) {
+    // Get index of choice.
+    let choice = Math.floor(Math.random() * array.length);
+    // Save choice element reference.
+    let choiceElement = array[choice];
+    // Remove choice element from array.
+    array.splice(choice, 1);
+    // Return choice element.
+    return choiceElement;
   }
-
-  // Given some percentage (in decimal form) of fittest individuals from this generation and some other fit individuals, create a new generation.
-  mate(decimalFittest, otherFitIndividuals) {
-    // Join the fittest individuals with any others from outside this generation that are chosen to mate.
-    var matingPool = this.findTopPercent(decimalFittest).concat(otherFitIndividuals);
-    var children = new Array();
-    if (matingPool.length > 1) {
-      // do it
-      for (var session = 0; session < this.numberOfIndividuals; session++) {
-        var partnerA = getRandomInt(0, matingPool.length - 1);
-        var partnerB;
-        // get a random individual to mate with but make sure it is not the current individual.
-        do {
-          partnerB = getRandomInt(0, matingPool.length - 1);
-        } while (partnerA == partnerB)
-        var child = matingPool[partnerA].crossover(matingPool[partnerB]);
-        children.push(child);
-      } // done it
-    } else {
-      children = matingPool;
-    }
-    var childGeneration = new Generation(generationJSON);
-    childGeneration.individuals = children;
-    return childGeneration;
-  }
-
-  /* Helpers */
-  // Sort by fitness
-  sort() {
-    this.individuals.sort(this.compareFitness);
-  }
-
-  compareFitness(individual1, individual2) {
-    return individual1.fitness - individual2.fitness;
-  }
-
-  // Prints
-  print(sort) {
-    if (sort) this.sort();
-    this.printIndividuals();
-  }
-
-  printIndividuals(individuals) {
-    if (!individuals) individuals = this.individuals;
-    for (var i = 0; i < individuals.length; i++) {
-      individuals[i].print();
+  _groups(size=5) {
+    // Create groups. Make a shallow copy of individuals.
+    let groups = [], individuals = this.individuals.slice();
+    groups.length = Math.ciel(individuals.length / size) / individuals.length;
+    for (var i=0; individuals.length > 0; i++) {
+      // Choose one from group, and remove from individuals.
+      let individual = this._chooseAndSplice(individuals);
+      // Put individual into new group.
+      groups[i%size].push(individual);
     }
   }
 
-  printFittest(amount) {
-    this.printIndividuals(this.findFittest(amount));
+  // Sort individuals based on evaluation function.
+  _tournament(group) {
+    let outcomes = group.map((individual, index) => ({
+      index: index,
+      value: this.fitness(individual, group)
+    }));
+    // Sort outcomes that may be multidimensional.
+    outcomes.sort(this.comparison);
+    return outcomes.map(outcome => group[outcome.index]);
   }
 
-  printTopPercent(decimal) {
-    this.printIndividuals(this.findTopPercent(decimal));
+  _comparison({value: a}, {value: b}) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+      // A comes before B if A dominates B.
+      if (a.every((v, i) => (v > b[i]))) {
+        return -1;
+      // B comes before A if A is dominated by B.
+      } else if (b.every((v, i) => (v > a[i]))) {
+        return 1;
+      }
+      return 0;
+    }
+    return a - b;
   }
 
-  printWeakest(amount) {
-    this.printIndividuals(this.findWeakest(amount));
+  // TODO Use an internal iterable object to apply these generational rules again.
+  next() {
+    this.individuals = this._generation().concat(this.removal(this.individuals));
+    return this.individuals;
   }
 
 }
