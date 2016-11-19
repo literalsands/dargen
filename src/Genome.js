@@ -53,7 +53,7 @@ export class Genome extends Array {
       return selection;
     }, []);
   }
-  // Repeat, in place, contiguous selected
+  /* Genetic operators */
   _deletion(rate) {
     let selection = this.selection(rate);
     // Group consecutive selections.
@@ -61,6 +61,7 @@ export class Genome extends Array {
       this.splice(selected, 1);
     });
   }
+  // Repeat, in place, contiguous selected
   _duplication(rate) {
     let selection = this.selection(rate),
       groupedSelection = selection.reduce((groups, selected) => {
@@ -101,15 +102,17 @@ export class Genome extends Array {
       this.toRandom(selected);
     });
   }
-  /* Genetic operators */
-  mutate({
-    deletion = 0,
-    duplication = 0,
-    inversion = 0,
-    substitution = 0.05,
-    modify = true
-    // Smooth mutations.
-  }) {
+  // Smooth mutations.
+  mutate(options) {
+    let {
+      deletion = 0,
+      duplication = 0,
+      inversion = 0,
+      substitution = 0.05,
+      modify = true,
+      upper = Infinity,
+      lower = 1
+    } = options || {};
     let genome = (modify)? this: this.copy();
     // Chance to duplicate something.
     // Duplication limitations.
@@ -123,18 +126,28 @@ export class Genome extends Array {
     // Chance for deletion.
     // Deletion limitations.
     genome._deletion(deletion);
+    // Truncate the genome to the max size.
+    if (Number.isFinite(upper) && genome.size > upper) {
+      genome.size = upper;
+    }
+    // Increase the genome to the minimum size.
+    if (Number.isFinite(lower) && genome.size < lower) {
+      genome.size = lower;
+    }
     return genome;
   } // end mutate
 
   // Random chance any particular gene is from either parent.
   // Splice, Pivot Splice
-  crossover({
-    crossover = (1 - mates.length / 1),
-    modify = false
-    // Genes retain position or not.
-    // Splice or average splice.
-    // Crossover is sectional or uniform.
-  }, ...mates) {
+  // Genes retain position or not.
+  // Splice or average splice.
+  // Crossover is sectional or uniform.
+  crossover(options, ...mates) {
+    let {
+      crossover = (1 - (1 / mates.length)),
+      modify = false,
+      average = false
+    } = options;
     let child = (modify)? this: this.slice();
     // Retrieve a selection of gene indexes that will be changed.
     let selection = child.selection(crossover);
@@ -143,17 +156,21 @@ export class Genome extends Array {
       let geneMate = mates[Math.floor(Math.random() * mates.length)];
       // If mate doesn't contain gene length, abort.
       let cross = (geneMate.length > selected) ? geneMate[selected]: child[selected];
-      child.splice(selected, 1, cross);
-    })
+      if (average) {
+        child.spliceAverage(selected, 1, cross, 0.5);
+      } else {
+        child.splice(selected, 1, cross);
+      }
+    });
     return child;
   } // end crossover
 
   spliceAverage(start=0, extend=this.length, splice, weight = 1) {
     for (let i=0; i < extend &&
       start + i < this.length &&
-      start + i < splice.length; i++) {
-      this[start + i] = (this[start + i] * weight + splice[start + i]) / (2 + weight);
-    }
+        start + i < splice.length; i++) {
+          this[start + i] = (this[start + i] * weight + splice[start + i] / weight) / (2 + weight);
+        }
   }
 
   /* Helper Methods */

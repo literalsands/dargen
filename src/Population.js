@@ -3,6 +3,7 @@
 // First created December 5th, 2014
 
 import { Generation } from './Generation';
+import { Individual } from './Individual';
 import uuid from 'node-uuid';
 let { v4: getIdentifier } = uuid;
 
@@ -13,13 +14,18 @@ export class Population {
     ({
       phenotype: this.phenotype,
       size: this.size,
-      individuals: this.individuals,
+      individuals: this.individuals = [],
       identifier: this.identifier = `p-${getIdentifier()}`
     } = options);
     /* Setup Population using configuration object */
     // public variables
     // e.g. the top ten percent of the entire population will mate with the top 90 percent
     // of the current child generation to create the next child generation.
+    while (this.individuals.length < this.size) {
+      this.individuals.push(new Individual({
+        phenotype: this.phenotype
+      }));
+    }
   }
 
   // Deeply copy the population.
@@ -28,10 +34,10 @@ export class Population {
 
   /* Genetic Operators */
   // If iterations are false or zero then it defaults to the amount of iterations in the config file.
-  evolve(options, iterations) {
-    generation = new Generation(options, this);
+  evolve(options = {fitness:(()=>0)}, iterations=1) {
+    let generation = new Generation(options, this);
     for (let i = 0; i < iterations; i++) {
-      generation.next();
+      this.individuals = generation.next();
     }
     return this;
   }
