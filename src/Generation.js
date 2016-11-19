@@ -2,7 +2,8 @@
 // by Paul Prae
 // First created Janurary 3rd, 2015
 
-import Individual from './Individual';
+import { Population } from './Population';
+import { Individual } from './Individual';
 import getRandomInt from './helpers';
 import uuid from 'node-uuid';
 let { v4: getIdentifier } = uuid;
@@ -20,26 +21,33 @@ export class Generation {
       fitness: this.fitness,
       comparison: this.comparison = this._comparision,
 
+      // Strategies
+      groups: this.groups = 5,
+      elites: this.elites = 1,
+
       population: this.population,
       identifier: this.identifier = `g-${getIdentifier()}`
     } = options);
-    if (popluations.length) {
+    if (populations.length) {
       // Make a temporary population to evolve multiple populations with.
       this.population = new Population({
-        individuals: populations.reduce(((is, p) => is.concat(p.individuals), []))
+        individuals: populations.reduce(
+          ((is, p) => is.concat(p.individuals)),
+          [])
       });
     }
   }
 
   _generation() {
-    let groups = this._groups().map(this._tournament);
-    let elite = groups.map(this._selection());
+    let groups = this._groups().map(this._tournament, this);
+    // Tournament sorts a group.
+    let elite = groups.map(this._selection, this);
     // Should the groups and ranks be saved somewhere?
-    let childGroups = elite.map(
-      (leet, i) => groups.map(
-        individual => crossover(...leet)));
+    let childGroups = groups.map(
+      (group, i) => group.map(
+        individual => individual.crossover(...elite[i])));
     let childIndividuals = childGroups.reduce(
-      (individuals, group => individuals.concat(group)), []
+      ((individuals, group) => individuals.concat(group)), []
     );
     // Mutated Offspring of Non-elite and Elite.
     return childIndividuals.map(individual => individual.mutate());
@@ -48,7 +56,7 @@ export class Generation {
   // Given an ordered group, choose which individuals will mate with the rest of the group.
   _selection(group) {
     // Return only the top performing member.
-    return [group[0]];
+    return group.slice(0,this.elites);
   }
 
   // Given the current population, determine which will be saved for the next generation.
@@ -67,16 +75,19 @@ export class Generation {
     // Return choice element.
     return choiceElement;
   }
-  _groups(size=5) {
+  _groups(size=this.groups) {
     // Create groups. Make a shallow copy of individuals.
-    let groups = [], individuals = this.individuals.slice();
-    groups.length = Math.ciel(individuals.length / size) / individuals.length;
-    for (var i=0; individuals.length > 0; i++) {
+    let groups = [], individuals = this.population.individuals.slice();
+    groups.length = Math.ceil(individuals.length / size);
+    for (let i=0; individuals.length > 0; i++) {
       // Choose one from group, and remove from individuals.
       let individual = this._chooseAndSplice(individuals);
       // Put individual into new group.
-      groups[i%size].push(individual);
+      let j = Math.floor(i/size);
+      if (!groups[j]) groups[j] = [];
+      groups[j].push(individual);
     }
+    return groups;
   }
 
   // Sort individuals based on evaluation function.
@@ -84,7 +95,7 @@ export class Generation {
     let outcomes = group.map((individual, index) => ({
       index: index,
       value: this.fitness(individual, group)
-    }));
+    }), this);
     // Sort outcomes that may be multidimensional.
     outcomes.sort(this.comparison);
     return outcomes.map(outcome => group[outcome.index]);
@@ -101,13 +112,13 @@ export class Generation {
       }
       return 0;
     }
-    return a - b;
+    return b - a;
   }
 
   // TODO Use an internal iterable object to apply these generational rules again.
   next() {
-    this.individuals = this._generation().concat(this.removal(this.individuals));
-    return this.individuals;
+    this.population.individuals = this._generation().concat(this.removal(this.population.individuals));
+    return this.population.individuals;
   }
 
 }

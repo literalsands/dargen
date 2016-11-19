@@ -92,7 +92,8 @@ export class Individual {
   // private variables
 
   get traits() {
-    return this._phenotype();
+    let traits = this._phenotype();
+    return traits;
   }
 
   evaluate(func) {
@@ -107,7 +108,7 @@ export class Individual {
   }
 
   crossover(...mates) {
-    var childGenome = this.genome.crossover(this.traits.crossover, ...mates);
+    var childGenome = this.genome.crossover(this.traits.crossover, ...mates.map(i=>i.genome));
     // How do we decide the new generation? This might need to be called again, higher up.
     return new Individual({
       genome: childGenome,
