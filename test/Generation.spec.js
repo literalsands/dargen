@@ -12,7 +12,8 @@ describe("Generation", () => {
   describe("constructor", () => {
     it("takes a generation");
   });
-  describe("json");
+  describe("json", ()=> {
+  });
   describe("evaluate", () => {
     it("takes a function");
     it("should return a sortable builtin array");

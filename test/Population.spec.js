@@ -31,7 +31,8 @@ describe("Population", () => {
       }).should.throw(Error);
     });
   });
-  describe("json");
+  describe("json", () => {
+  });
   describe("identifier", () => {
     it("should be a unique string");
   });
