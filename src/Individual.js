@@ -13,18 +13,15 @@ export class Individual {
     ({
       genome: this.genome = new Genome(1),
       parents: this.parents,
-      // generation: this.generation
-      // population: this.population
-      timestamp: this.timestamp = new Date(),
+      generation: this.generation,
+      population: this.population,
+      timestamp: this.timestamp = +new Date(),
       identifier: this.identifier = `i-${getIdentifier()}`,
       phenotype,
     } = options);
 
     if (!this.genome instanceof Genome) {
       this.genome = new Genome(this.genome);
-    }
-    if (!this.timestamp instanceof Date) {
-      this.timestamp = new Date(this.timestamp);
     }
     if (phenotype !== undefined) {
       this.phenotype = phenotype;

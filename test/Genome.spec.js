@@ -95,9 +95,24 @@ describe("Genome", () => {
       genome.should.deep.equal(genomeCopy.reverse());
     });
     it("provides deletion", () => {
-      let genome = new Genome(2);
+      let genome = new Genome(4);
       genome.mutate({deletion: 1, substitution: 0});
-      genome.size.should.equal(0);
+      genome.size.should.be.at.most(3);
+    });
+    it("provides incrementation");
+    it("provides gravity");
+    it("provides fuzzy mutations");
+    it("never allows size to become less than 1 or lower", () => {
+      let genome = new Genome(4);
+      genome.mutate({deletion: 1, substitution: 0, lower: 4});
+      genome.size.should.equal(4);
+      genome.mutate({deletion: 1, substitution: 0});
+      genome.size.should.equal(1);
+    });
+    it("never allows size to become greater than upper", () => {
+      let genome = new Genome(4);
+      genome.mutate({duplication: 1, substitution: 0, upper: 6});
+      genome.size.should.equal(6);
     });
   });
   describe("crossover", () => {

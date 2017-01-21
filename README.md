@@ -1,21 +1,7 @@
-This is my first time writing back-end, prototype-based JavaScript. There is much refactoring ahead before I can turn this into a full fledged web service. I hope to tie this into a basic web site that optimizes itself based on traits the users like.
-
-##Demo
-To try it out:
-	$> node Population_Tests.js
-
-var genome = new Genome(12);
-
 ##The Genetics
-Individual:
 
-Generations:
-
-Fitness operator:
-
-Selection and combination:
-
-Mutation:
+Each class holds information for implementing different parts of evolutionary strategies.
+Extend or pass options to change how each strategy unfolds.
 
 Population => Exploratory Strategy
   Establish phenotype.
@@ -25,20 +11,16 @@ Population => Exploratory Strategy
   Establish selection strategy.
   Establish replacement strategy.
   Establish population parameters.
+
 Generations => Selection Strategy
   Evaluation of Individuals in Generation
+
 Individuals => Crossover Strategy
   Create traits using phenotype(genome).
   Crossover strategy and mutation strategy are
     characteristics of phenotype.
+
 Genomes => Mutation Strategy
-
-
-Can the phenotype be serialized? Is that even important?
-
-Can the phenotype be more than one layer deep?
-
-What does a phenotype look like?
 
 (1) []
 (N) {[]}

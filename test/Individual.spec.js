@@ -197,7 +197,8 @@ describe("Individual", () => {
       individual = new Individual();
     });
     it("should be a datetime", () => {
-      individual.timestamp.should.be.a('date');
+      individual.timestamp.should.be.a('number');
+      new Date(individual.timestamp).should.be.a('date');
     });
     it("should be a recent datetime", () => {
       let recentDate = new Date();
@@ -206,7 +207,7 @@ describe("Individual", () => {
     });
     it("should not be in the future", () => {
       // Add 1 "should be below or equal to"
-      individual.timestamp.getTime().should.be.below(new Date().getTime() + 1)
+      individual.timestamp.should.be.below(new Date().getTime() + 1)
     });
   });
   describe("generation", () => {
@@ -214,8 +215,8 @@ describe("Individual", () => {
     beforeEach(() => {
       individual = new Individual();
     });
-    it("should be a number", () => {
-      individual.generation.should.be.a('number');
+    it("should be an identifier if defined", () => {
+      expect(individual.generation).to.be.oneOf([undefined, 'string']);
     });
   });
   describe("population", () => {
@@ -223,8 +224,8 @@ describe("Individual", () => {
     beforeEach(() => {
       individual = new Individual();
     });
-    it("should be a unique string", () => {
-      expect(individual.population).to.be.a('string');
+    it("should be an identifier if defined", () => {
+      expect(individual.population).to.be.oneOf([undefined, 'string']);
     });
   });
   describe("mutate", () => {
