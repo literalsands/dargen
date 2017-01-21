@@ -1,23 +1,40 @@
-This is my first time writing back-end, prototype-based JavaScript. There is much refactoring ahead before I can turn this into a full fledged web service. I hope to tie this into a basic web site that optimizes itself based on traits the users like.
-
-##Demo
-To try it out:
-	$> node demo.js
-
-To start, we have the algorithm optimize a combination of three colors that a person feels go together really well. We will use my favorite color, purple, and my girlfriend's favorite color, turquoise, as optimal values. We automate the user input so we can iterate faster. Enjoy!
-
 ##The Genetics
-Individual:
-An array of three colors.
 
-Generations:
-A population is ten individuals, each initialized with three random colors from the pool of potential colors. 
+Each class holds information for implementing different parts of evolutionary strategies.
+Extend or pass options to change how each strategy unfolds.
 
-Fitness operator:
-It will simply count how many desired colors are in the individual.
+Population => Exploratory Strategy
+  Establish phenotype.
+    Establishes mutation strategy.
+    Establishes crossover strategy.
+  Establish gene alphabet. (I'm saying always (0-1) for now.)
+  Establish selection strategy.
+  Establish replacement strategy.
+  Establish population parameters.
 
-Selection and combination:
-Only parents with a fitness greater than zero will get to mate. They will create children for the next generation. All parents will be removed from the population after they create children except the most fit parent, which will replace the weakest child. Children will be roughly half the traits of one parent and another random fit parent.
+Generations => Selection Strategy
+  Evaluation of Individuals in Generation
 
-Mutation:
-We need to converge fairly quickly so will limit exploration. Crossover and the initial state should provide enough variation. There is a 5% chance that any of the child’s colors is switched to a random color from the color pool.
+Individuals => Crossover Strategy
+  Create traits using phenotype(genome).
+  Crossover strategy and mutation strategy are
+    characteristics of phenotype.
+
+Genomes => Mutation Strategy
+
+(1) []
+(N) {[]}
+(M) ()
+(M) {()}
+(N, M) {[], ()}
+(N) {{}}
+
+Recurses through objects.
+Terminates at an array that recieves its own gene, or at a function which receives the entire genome.
+
+A phenotype function is called with the genome as its first argument and the length of the array genome as its second argument.
+
+An array will always have one of its elements chosen.
+
+
+
