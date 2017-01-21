@@ -24,28 +24,21 @@ describe("Population", () => {
         });
       }).should.not.throw(Error);
     })
-    it("takes a population as an argument", () => {
-    });
+    it("takes a population as an argument");
     it("requires arguments", () => {
       (() => {
         new Population();
       }).should.throw(Error);
     });
   });
-  describe("json", () => {
-  });
+  describe("json");
   describe("identifier", () => {
-    it("should be a unique string", () => {
-    });
+    it("should be a unique string");
   });
   describe("evolve", () => {
-    it("should apply selection and removal to create a new generation", () => {
-    });
-    it("should create a new generation", () => {
-    });
-    it("should create new individuals", () => {
-    });
-    it("returns a generation number", () => {
-    });
+    it("should apply selection and removal to create a new generation");
+    it("should create a new generation");
+    it("should create new individuals");
+    it("returns a generation number");
   });
 });

@@ -10,31 +10,22 @@ should();
 
 describe("Generation", () => {
   describe("constructor", () => {
-    it("takes a generation", () => {
-    });
+    it("takes a generation");
   });
-  describe("json", () => {
-  });
+  describe("json");
   describe("evaluate", () => {
-    it("takes a function", () => {
-    });
-    it("should return a sortable builtin array", () => {
-    });
-    it("should return a promise", () => {
-    });
+    it("takes a function");
+    it("should return a sortable builtin array");
+    it("should return a promise");
   });
   describe("sort", () => {
-    it("returns array", () => {
-    });
-    it("returns descending values", () => {
-    });
+    it("returns array");
+    it("returns descending values");
   });
   describe("selection", () => {
-    it("returns array", () => {
-    });
+    it("returns array");
   });
   describe("individuals", () => {
-    it("should have a generation", () => {
-    });
+    it("should have a generation");
   });
 });
