@@ -18,7 +18,7 @@ describe("Genome", () => {
     });
     it("takes an array as an argument", () => {
       (() => {
-        new Genome([]);
+        new Genome([1, 0.4]);
       }).should.not.throw(Error);
     })
     it("takes a number as an argument", () => {
@@ -99,7 +99,42 @@ describe("Genome", () => {
       genome.mutate({deletion: 1, substitution: 0});
       genome.size.should.be.at.most(3);
     });
-    it("provides incrementation");
+    describe("incrementation", () => {
+      it("is provided", () => {
+        let genome = new Genome(4);
+        let genomeCopy = genome.copy();
+        genome.mutate({substitution: 0, incrementation: 0, increment: 0.05});
+        expect(genome).to.deep.equal(genomeCopy);
+        genome.mutate({incrementation: 1, increment: 0.05});
+        expect(genome).to.not.deep.equal(genomeCopy);
+      });
+      it("moves values a fixed amount in a random direction", () => {
+        let genome = new Genome([0.5, 0.5]);
+        let genomeCopy = genome.copy();
+        genome.mutate({incrementation: 1, increment: 0.05});
+        expect(genome[0]).to.be.oneOf([0.55, 0.45]);
+      });
+      it("stays between the values of 0 and 1", () => {
+        let genome = new Genome(12);
+        genome.mutate({incrementation: 1, increment: 0.7});
+        genome.forEach((gene)=> expect(gene).to.be.within(0,1));
+      });
+      it("changes value to 0 or 1 if value would pass 0 or 1 and is not that number", () => {
+        let genome = new Genome(12);
+        genome.mutate({incrementation: 1, increment: 1});
+        genome.forEach((gene)=> expect(gene).to.be.oneOf([1, 0]));
+      });
+      it("will always move away from 0 or 1 if value is 0 or 1", () => {
+        let genome = new Genome([0, 1]);
+        genome.mutate({incrementation: 1, increment: 0.5});
+        expect(genome[0]).to.equal(0.5);
+        expect(genome[1]).to.equal(0.5);
+        // Special case transition from 0 to 1.
+        genome = new Genome([1, 0, 1, 0]);
+        genome.mutate({incrementation: 1, increment: 1});
+        expect(genome).to.deep.equal([0, 1, 0, 1]);
+      });
+    });
     it("provides gravity");
     it("provides fuzzy mutations");
     it("never allows size to become less than 1 or lower", () => {

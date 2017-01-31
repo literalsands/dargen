@@ -102,13 +102,32 @@ export class Genome extends Array {
       this.toRandom(selected);
     });
   }
+  _increment(index, increment) {
+    if (this[index] <= 0) this[index] += increment;
+    else if (this[index] >= 1) this[index] -= increment;
+    else {
+      this[index] = (Math.random() > 0.5)?
+        this[index]+increment:
+        this[index]-increment;
+    }
+    if (this[index] < 0) this[index] = 0;
+    if (this[index] > 1) this[index] = 1;
+  }
+  _incrementation(rate, increment) {
+    let selection = this.selection(rate);
+    selection.forEach((selected) => {
+      this._increment(selected, increment);
+    });
+  }
   // Smooth mutations.
   mutate(options) {
     let {
       deletion = 0,
       duplication = 0,
       inversion = 0,
-      substitution = 0.05,
+      incrementation = 0,
+      increment = 0,
+      substitution = 0.0,
       modify = true,
       upper = Infinity,
       lower = 1
@@ -126,6 +145,9 @@ export class Genome extends Array {
     // Chance for deletion.
     // Deletion limitations.
     genome._deletion(deletion);
+    // Chance for incrementation.
+    // Amount to increment.
+    genome._incrementation(incrementation, increment);
     // Truncate the genome to the max size.
     if (Number.isFinite(upper) && genome.size > upper) {
       genome.size = upper;
