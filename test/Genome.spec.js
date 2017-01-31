@@ -18,7 +18,7 @@ describe("Genome", () => {
     });
     it("takes an array as an argument", () => {
       (() => {
-        new Genome([]);
+        new Genome([1, 0.4]);
       }).should.not.throw(Error);
     })
     it("takes a number as an argument", () => {
@@ -62,53 +62,110 @@ describe("Genome", () => {
   describe("mutate", () => {
     it("modifies the parent", () => {
       let parentGenome = new Genome(2);
-      let copiedGenome = parentGenome.copy();
+      let genomeCopy = parentGenome.copy();
       let mutatedGenome = parentGenome.mutate({substitution: 1});
-      parentGenome.should.not.deep.equal(copiedGenome);
+      parentGenome.should.not.deep.equal(genomeCopy);
       parentGenome.should.deep.equal(mutatedGenome);
     });
     it("does not modify the parent when asked", () => {
       let parentGenome = new Genome(2);
-      let copiedGenome = parentGenome.copy();
+      let genomeCopy = parentGenome.copy();
       let mutatedGenome = parentGenome.mutate({substitution: 1, modify: false});
-      parentGenome.should.deep.equal(copiedGenome);
+      parentGenome.should.deep.equal(genomeCopy);
       parentGenome.should.not.deep.equal(mutatedGenome);
     });
-    it("provides substitution", () => {
-      let genome = new Genome(2);
-      let copiedGenome = genome.copy();
-      genome.mutate({substitution: 1});
-      genome.should.not.deep.equal(copiedGenome);
+    describe("substitution", () => {
+      it("is provided", () => {
+        let genome = new Genome(2);
+        let genomeCopy = genome.copy();
+        genome.mutate({substitution: 0});
+        genome.should.deep.equal(genomeCopy);
+        genome.mutate({substitution: 1});
+        genome.should.not.deep.equal(genomeCopy);
+      });
     });
-    it("provides duplication", () => {
-      let genome = new Genome(2);
-      genome.mutate({duplication: 1, substitution: 0});
-      genome.size.should.equal(4);
-      genome[0].should.equal(genome[2]);
-      genome[1].should.equal(genome[3]);
+    describe("duplication", () => {
+      it("is provided", () => {
+        let genome = new Genome(2);
+        let genomeCopy = genome.copy();
+        genome.mutate({duplication: 0});
+        genome.should.deep.equal(genomeCopy);
+        genome.mutate({duplication: 1});
+        genome.size.should.equal(4);
+        genome[0].should.equal(genome[2]);
+        genome[1].should.equal(genome[3]);
+      });
     });
-    it("provides inverse", () => {
-      let genome = new Genome(2);
-      let genomeCopy = genome.copy();
-      genome.mutate({inversion: 1, substitution: 0});
-      genome.size.should.equal(2);
-      genome.should.deep.equal(genomeCopy.reverse());
+    describe("inverse", () => {
+      it("is provided", () => {
+        let genome = new Genome(2);
+        let genomeCopy = genome.copy();
+        genome.mutate({inversion: 0});
+        genome.should.deep.equal(genomeCopy);
+        genome.mutate({inversion: 1});
+        genome.size.should.equal(2);
+        genome.should.deep.equal(genomeCopy.reverse());
+      });
     });
-    it("provides deletion", () => {
-      let genome = new Genome(4);
-      genome.mutate({deletion: 1, substitution: 0});
-      genome.size.should.be.at.most(3);
+    describe("deletion", () => {
+      it("is provided", () => {
+        let genome = new Genome(4);
+        let genomeCopy = genome.copy();
+        genome.mutate({deletion: 0});
+        expect(genome).to.deep.equal(genomeCopy);
+        genome.mutate({deletion: 1});
+        expect(genome).to.not.deep.equal(genomeCopy);
+      });
+      it("removes all elements to the required 1", () => {
+        let genome = new Genome(4);
+        genome.mutate({deletion: 1});
+        genome.size.should.equal(1);
+      });
+      it("removes all elements to the lower bound", () => {
+        let genome = new Genome(4);
+        genome.mutate({deletion: 1, lower: 4});
+        genome.size.should.equal(4);
+      });
+      it("doesn't trigger replacement for lower bound protected elements");
     });
-    it("provides incrementation");
+    describe("incrementation", () => {
+      it("is provided", () => {
+        let genome = new Genome(4);
+        let genomeCopy = genome.copy();
+        genome.mutate({incrementation: 0, increment: 0.05});
+        expect(genome).to.deep.equal(genomeCopy);
+        genome.mutate({incrementation: 1, increment: 0.05});
+        expect(genome).to.not.deep.equal(genomeCopy);
+      });
+      it("moves values a fixed amount in a random direction", () => {
+        let genome = new Genome([0.5, 0.5]);
+        let genomeCopy = genome.copy();
+        genome.mutate({incrementation: 1, increment: 0.05});
+        expect(genome[0]).to.be.oneOf([0.55, 0.45]);
+      });
+      it("stays between the values of 0 and 1", () => {
+        let genome = new Genome(12);
+        genome.mutate({incrementation: 1, increment: 0.7});
+        genome.forEach((gene)=> expect(gene).to.be.within(0,1));
+      });
+      it("changes value to 0 or 1 if value would pass 0 or 1 and is not that number", () => {
+        let genome = new Genome(12);
+        genome.mutate({incrementation: 1, increment: 1});
+        genome.forEach((gene)=> expect(gene).to.be.oneOf([1, 0]));
+      });
+      it("will always move away from 0 or 1 if value is 0 or 1", () => {
+        let genome = new Genome([0, 1]);
+        genome.mutate({incrementation: 1, increment: 0.5});
+        expect(genome[0]).to.equal(0.5);
+        expect(genome[1]).to.equal(0.5);
+        // Special case transition from 0 to 1.
+        genome = new Genome([1, 0, 1, 0]);
+        genome.mutate({incrementation: 1, increment: 1});
+        expect(genome).to.deep.equal([0, 1, 0, 1]);
+      });
+    });
     it("provides gravity");
     it("provides fuzzy mutations");
-    it("never allows size to become less than 1 or lower", () => {
-      let genome = new Genome(4);
-      genome.mutate({deletion: 1, substitution: 0, lower: 4});
-      genome.size.should.equal(4);
-      genome.mutate({deletion: 1, substitution: 0});
-      genome.size.should.equal(1);
-    });
     it("never allows size to become greater than upper", () => {
       let genome = new Genome(4);
       genome.mutate({duplication: 1, substitution: 0, upper: 6});
@@ -140,13 +197,13 @@ describe("Genome", () => {
   describe("copy", () => {
     it("is not the same object", () => {
       let genome = new Genome(2);
-      let copiedGenome = genome.copy();
-      genome.should.not.equal(copiedGenome);
+      let genomeCopy = genome.copy();
+      genome.should.not.equal(genomeCopy);
     });
     it("is equal to the original", () => {
       let genome = new Genome(2);
-      let copiedGenome = genome.copy();
-      genome.should.deep.equal(copiedGenome);
+      let genomeCopy = genome.copy();
+      genome.should.deep.equal(genomeCopy);
     });
   });
 })
