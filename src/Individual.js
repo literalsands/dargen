@@ -31,7 +31,9 @@ export class Individual {
   // It looks like a Phenotype runner could be its own object or factory.
   _phenotype_array(arr, array_index=0) {
     // Return corresponding array value and increment counter.
-    return arr[Math.floor(arr.length * this.genome[array_index])];
+    let gene = this.genome[array_index];
+    if (gene < 1) return arr[Math.floor(arr.length * gene)];
+    else return arr[arr.length-1];
   }
   _phenotype_function(func, array_total = this._phenotype_number_of_arrays) {
     // Call function with Genome. Supply when array genes stop.

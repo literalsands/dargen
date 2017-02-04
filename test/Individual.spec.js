@@ -147,6 +147,15 @@ describe("Individual", () => {
       let otherIndividual = new Individual({genome: individual.genome.copy()});
       expect(otherIndividual.traits).to.deep.equal(individual.traits);
     });
+    describe("array", () => {
+      it("should return a value when a gene is 0 or 1", () => {
+        individual.phenotype = [0, 1, 2, 3];
+        individual.genome[0] = 0;
+        expect(individual.traits).to.equal(0);
+        individual.genome[0] = 1;
+        expect(individual.traits).to.equal(3);
+      });
+    });
   });
   describe("evaluate", () => {
     let individual;
