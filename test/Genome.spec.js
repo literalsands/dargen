@@ -166,6 +166,7 @@ describe("Genome", () => {
     });
     it("provides gravity");
     it("provides fuzzy mutations");
+    it("provides computed gradient mutation");
     it("never allows size to become greater than upper", () => {
       let genome = new Genome(4);
       genome.mutate({duplication: 1, substitution: 0, upper: 6});
