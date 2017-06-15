@@ -1,7 +1,3 @@
-// GENETIC EXPERIENCE MANAGEMENT
-// by Paul Prae
-// First created Janurary 3rd, 2015
-
 import { Population } from './Population';
 import { Individual } from './Individual';
 import getRandomInt from './helpers';

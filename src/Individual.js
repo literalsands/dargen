@@ -1,7 +1,3 @@
-// GENETIC EXPERIENCE MANAGEMENT
-// by Paul Prae
-// First created December 5th, 2014
-
 import { Genome } from './Genome';
 import uuid from 'node-uuid';
 let { v4: getIdentifier } = uuid;

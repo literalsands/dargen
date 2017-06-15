@@ -1,7 +1,3 @@
-// GENETIC EXPERIENCE MANAGEMENT
-// by Paul Prae
-// First created December 5th, 2014
-
 import { Generation } from './Generation';
 import { Individual } from './Individual';
 import uuid from 'node-uuid';

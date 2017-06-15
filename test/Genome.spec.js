@@ -1,7 +1,3 @@
-// GENETIC EXPERIENCE MANAGEMENT
-// by Paul Prae
-// First created Janurary 3rd, 2015
-
 import 'babel-polyfill';
 import {should, expect} from 'chai';
 import { Genome } from '../src/Genome';
