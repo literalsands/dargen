@@ -203,5 +203,46 @@ describe("Genome", () => {
       genome.should.deep.equal(genomeCopy);
     });
   });
+  describe("howSimilar", () => {
+    it("should be a function", () => {
+      let genome = new Genome(30);
+      expect(genome.howSimilar).to.be.a('function')
+    })
+    it("requires an argument",() => {
+      let genome = new Genome(30);
+      (() => {
+        genome.howSimilar();
+      }).should.throw(Error);
+    })
+    it("takes a single array-like argument", () => {
+      let genome = new Genome(30);
+      (() => {
+        genome.howSimilar([]);
+      }).should.not.throw(Error);
+    })
+    it("will return 1 if given self", () => {
+      let genome = new Genome(30);
+      expect(genome.howSimilar(genome)).to.equal(1)
+    })
+    it("will return 0 if given an empty genome", () => {
+      let genome = new Genome(30);
+      expect(genome.howSimilar([])).to.equal(0);
+    })
+    it("will return between 0 and 1 if given a crossover genome", () => {
+      let genome = new Genome(100);
+      let genomeMate = new Genome(100);
+      let genomeChild = genome.crossover({crossover: 0.5}, genomeMate)
+      expect(genomeChild.howSimilar(genome)).to.be.below(1)
+      expect(genomeChild.howSimilar(genome)).to.be.above(0)
+      expect(genomeChild.howSimilar(genomeMate)).to.be.below(1)
+      expect(genomeChild.howSimilar(genomeMate)).to.be.above(0)
+    })
+    it("will add up to 1 when compared from a child to both parents", () => {
+      let genome = new Genome(100);
+      let genomeMate = new Genome(100);
+      let genomeChild = genome.crossover({crossover: 0.5}, genomeMate)
+      expect(genomeChild.howSimilar(genome) + genomeChild.howSimilar(genomeMate)).to.equal(1)
+    })
+  })
 })
 
