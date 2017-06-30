@@ -1,12 +1,17 @@
-import { Population } from './Population';
-import { Individual } from './Individual';
-import getRandomInt from './helpers';
-import uuid from 'node-uuid';
+import { Population } from "./Population";
+import { Individual } from "./Individual";
+import getRandomInt from "./helpers";
+import uuid from "node-uuid";
 let { v4: getIdentifier } = uuid;
 
 // Holds a population or individuals at a certain iteration.
+/**
+ * Create a new Generation
+ *
+ * @export
+ * @class Generation
+ */
 export class Generation {
-
   constructor(options, ...populations) {
     ({
       // Save this generation's population as a copy.
@@ -27,9 +32,7 @@ export class Generation {
     if (populations.length) {
       // Make a temporary population to evolve multiple populations with.
       this.population = new Population({
-        individuals: populations.reduce(
-          ((is, p) => is.concat(p.individuals)),
-          [])
+        individuals: populations.reduce((is, p) => is.concat(p.individuals), [])
       });
     }
   }
@@ -39,11 +42,12 @@ export class Generation {
     // Tournament sorts a group.
     let elite = groups.map(this._selection, this);
     // Should the groups and ranks be saved somewhere?
-    let childGroups = groups.map(
-      (group, i) => group.map(
-        individual => individual.crossover(...elite[i])));
+    let childGroups = groups.map((group, i) =>
+      group.map(individual => individual.crossover(...elite[i]))
+    );
     let childIndividuals = childGroups.reduce(
-      ((individuals, group) => individuals.concat(group)), []
+      (individuals, group) => individuals.concat(group),
+      []
     );
     // Mutated Offspring of Non-elite and Elite.
     return childIndividuals.map(individual => individual.mutate());
@@ -52,7 +56,7 @@ export class Generation {
   // Given an ordered group, choose which individuals will mate with the rest of the group.
   _selection(group) {
     // Return only the top performing member.
-    return group.slice(0,this.elites);
+    return group.slice(0, this.elites);
   }
 
   // Given the current population, determine which will be saved for the next generation.
@@ -71,15 +75,16 @@ export class Generation {
     // Return choice element.
     return choiceElement;
   }
-  _groups(size=this.groups) {
+  _groups(size = this.groups) {
     // Create groups. Make a shallow copy of individuals.
-    let groups = [], individuals = this.population.individuals.slice();
+    let groups = [],
+      individuals = this.population.individuals.slice();
     groups.length = Math.ceil(individuals.length / size);
-    for (let i=0; individuals.length > 0; i++) {
+    for (let i = 0; individuals.length > 0; i++) {
       // Choose one from group, and remove from individuals.
       let individual = this._chooseAndSplice(individuals);
       // Put individual into new group.
-      let j = Math.floor(i/size);
+      let j = Math.floor(i / size);
       if (!groups[j]) groups[j] = [];
       groups[j].push(individual);
     }
@@ -88,22 +93,25 @@ export class Generation {
 
   // Sort individuals based on evaluation function.
   _tournament(group) {
-    let outcomes = group.map((individual, index) => ({
-      index: index,
-      value: this.fitness(individual, group)
-    }), this);
+    let outcomes = group.map(
+      (individual, index) => ({
+        index: index,
+        value: this.fitness(individual, group)
+      }),
+      this
+    );
     // Sort outcomes that may be multidimensional.
     outcomes.sort(this.comparison);
     return outcomes.map(outcome => group[outcome.index]);
   }
 
-  _comparison({value: a}, {value: b}) {
+  _comparison({ value: a }, { value: b }) {
     if (Array.isArray(a) && Array.isArray(b)) {
       // A comes before B if A dominates B.
-      if (a.every((v, i) => (v > b[i]))) {
+      if (a.every((v, i) => v > b[i])) {
         return -1;
-      // B comes before A if A is dominated by B.
-      } else if (b.every((v, i) => (v > a[i]))) {
+        // B comes before A if A is dominated by B.
+      } else if (b.every((v, i) => v > a[i])) {
         return 1;
       }
       return 0;
@@ -113,8 +121,9 @@ export class Generation {
 
   // TODO Use an internal iterable object to apply these generational rules again.
   next() {
-    this.population.individuals = this._generation().concat(this.removal(this.population.individuals));
+    this.population.individuals = this._generation().concat(
+      this.removal(this.population.individuals)
+    );
     return this.population.individuals;
   }
-
 }

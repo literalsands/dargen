@@ -1,8 +1,16 @@
 import { getRandomInt } from "./helpers";
 
+/**
+ * Creates a new Genome.
+ *
+ * @export
+ * @class Genome
+ * @param {Genome|Array|Number|undefined} genome - An array of genes or a number indicating the length of the genome.
+ * @extends {Array}
+ */
 export class Genome extends Array {
   constructor(genes) {
-    if (Number.isSafeInteger(genes) && genes > 0) {
+    if (Number.isSafeInteger(genes) && genes >= 0) {
       super();
       this.size = genes;
     } else if (Array.isArray(genes)) {
@@ -13,14 +21,30 @@ export class Genome extends Array {
   }
 
   // Override this for different gene types.
+  /**
+   * Returns a random valid gene value.
+   *
+   * @returns Number
+   * @memberof Genome
+   */
   getRandomGeneValue() {
     return Math.random();
   }
 
+  /**
+   * Size is the same as length.
+   *
+   * @memberof Genome
+   */
   get size() {
     return this.length;
   }
 
+  /**
+   * Setting size equivalent to setting length, but new positions are automatically populated with gene values.
+   *
+   * @memberof Genome
+   */
   set size(length) {
     let start = this.length;
     this.length = length;
@@ -29,13 +53,26 @@ export class Genome extends Array {
     }
   }
 
-  // Set a gene position to a random value.
+  /**
+   * Sets a gene position to a random value.
+   *
+   * @param {integer} index
+   * @returns Genome - Genome with position filled by a random gene value.
+   * @memberof Genome
+   */
   toRandom(index) {
     this[index] = this.getRandomGeneValue();
     return this;
   }
 
-  // Set gene values from start to stop to random values.
+  /**
+   * Set gene values form start to stop to random values.
+   *
+   * @param {integer} [start=0]
+   * @param {integer} [stop=this.length - 1]
+   * @returns Genome - Genome with positions filled by random gene values.
+   * @memberof Genome
+   */
   fillRandom(start = 0, stop = this.length - 1) {
     for (let i = start; i < stop + 1; i++) {
       this.toRandom(i);
@@ -43,7 +80,13 @@ export class Genome extends Array {
     return this;
   }
 
-  // Randomly increment or decrement value at a gene position.
+  /**
+   *  Randomly increment or decrement value at a gene position.
+   *
+   * @param {integer} index
+   * @param {number} increment
+   * @memberof Genome
+   */
   increment(index, increment) {
     if (this[index] <= 0) this[index] += increment;
     else if (this[index] >= 1) this[index] -= increment;
@@ -56,7 +99,13 @@ export class Genome extends Array {
     if (this[index] > 1) this[index] = 1;
   }
 
-  // Select genes at a certain rate.
+  /**
+   *  Select genes at a certain rate.
+   *
+   * @param {number} rate
+   * @returns integer[] - An array of selected gene positions.
+   * @memberof Genome
+   */
   selection(rate) {
     return this.reduce((selection, gene, i) => {
       if (Math.random() <= rate) {
@@ -67,6 +116,7 @@ export class Genome extends Array {
   }
 
   /* Genetic mutation operators. */
+
   _deletion(rate) {
     let selection = this.selection(rate);
     // Group consecutive selections.
@@ -135,7 +185,13 @@ export class Genome extends Array {
     });
   }
 
-  // Smooth mutations.
+  /**
+   * Apply mutations to genome.
+   *
+   * @param {Object|Array} options - Options specifying a single mutation or an array of options as a pipeline of mutations.
+   * @returns Genome - Returns the same genome, with mutation or mutation pipeline applied, unless specified.
+   * @memberof Genome
+   */
   mutate(options) {
     let {
       deletion = 0,
@@ -180,6 +236,14 @@ export class Genome extends Array {
   // Genes retain position or not.
   // Splice or average splice.
   // Crossover is sectional or uniform.
+  /**
+   *
+   *
+   * @param {Object|Array} options - Options specifying a single crossover mechanism or an array of options as a pipeline of crossover mechanisms.
+   * @param {...Genome|...Array} mates - Genomes used in crossover.
+   * @returns Genome - Genome created using the genes of this Genome and mates.
+   * @memberof Genome
+   */
   crossover(options, ...mates) {
     let {
       crossover = 1 - 1 / mates.length,
@@ -217,10 +281,23 @@ export class Genome extends Array {
   }
 
   /* Helper Methods */
+  /**
+   * Creates a shallow copy of this genome.
+   *
+   * @returns Genome - A shallow copy of this genome.
+   * @memberof Genome
+   */
   copy() {
     return this.slice();
   }
 
+  /**
+   * Determine if this genome is equal to another.
+   *
+   * @param {Genome|Array} genome - Genome for comparison.
+   * @returns boolean - The genomes have the same values at the same positions and are of the same length.
+   * @memberof Genome
+   */
   isEqual(genome) {
     if (this.length !== genome.length) {
       return false;
@@ -228,7 +305,13 @@ export class Genome extends Array {
     return this.every((value, index) => genome[index] === value);
   }
 
-  // Return the percentage of shared genes.
+  /**
+   * Find the percentage of shared genes.
+   *
+   * @param {Genome|Array} genome - Genome for comparison.
+   * @returns Number - The percentage of same genes at same gene positions compared to the longest of the two genomes.
+   * @memberof Genome
+   */
   howSimilar(genome) {
     return (
       this.reduce((n, v, i) => (this[i] === genome[i] ? n + 1 : n), 0) /
