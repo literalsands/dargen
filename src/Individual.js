@@ -244,15 +244,3 @@ individual.traits
     });
   }
 }
-
-// How are genes expressed?
-// i.e. What genes are passed to what functions, and in what order?
-export class Epigenome extends Array {
-  constructor(epigenome) {
-    super(...epigenome);
-  }
-
-  mutate() {}
-
-  crossover() {}
-}
