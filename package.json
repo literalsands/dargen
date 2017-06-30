@@ -1,8 +1,8 @@
 {
-  "name": "Genetic",
-  "version": "0.0.2",
-  "description": "Genetic Algorithm",
-  "author": "Paul Prae <paul.prae@outlook.com>, Austin New <literalsands@gmail.com>",
+  "name": "Dargen",
+  "version": "0.0.1",
+  "description": "Reflective, Experimental Genetic Algorithm",
+  "author": "Austin New <literalsands@gmail.com>, Paul Prae <paul.prae@outlook.com>",
   "main": "dist/index.js",
   "scripts": {
     "compile": "babel -d dist/ src/",
@@ -15,6 +15,7 @@
     ]
   },
   "dependencies": {
+    "flat": "^2.0.1",
     "node-uuid": "^1.4.7"
   },
   "devDependencies": {
