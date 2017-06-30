@@ -1,4 +1,4 @@
-import { Genome } from "./Genome";
+import { GenomeBase } from "./GenomeBase";
 
 /**
  * Creates an epigenome.
@@ -10,9 +10,9 @@ import { Genome } from "./Genome";
  * @class Epigenome
  * @param {Epigenome|Array|Number|undefined} epigenome - An array of strings or a number indicating the length of the epigenome.
  * @param {String[]} [alphabet=[""]] - Strings that are available to the epigenome.
- * @extends {Array}
+ * @extends {GenomeBase}
  */
-export class Epigenome extends Genome {
+export class Epigenome extends GenomeBase {
   constructor(epigenome, alphabet) {
     super(epigenome);
     this._alphabet = alphabet;
@@ -28,7 +28,7 @@ export class Epigenome extends Genome {
   }
 
   /**
-   * Contains the given and the in use alphabet of the epigenome.
+   * The values available to epigenome mutations, and the in-use alphabet of the epigenome.
    *
    * @returns Set - Set that contains the alphabet.
    * @memberof Epigenome
@@ -85,3 +85,7 @@ export class Epigenome extends Genome {
   crossover() {
   }
 }
+
+Epigenome.Mutations = Object.assign({}, GenomeBase.Mutations, {
+  substitution(rate) {},
+})
