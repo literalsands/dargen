@@ -259,11 +259,12 @@ export class GenomeBase extends Array {
  * @param {Object} params - Mutation parameters.
  */
 GenomeBase.Mutations =  {
-  deletion(genome, selection, rate) {
-    let selection = this.selection(rate);
-    // Group consecutive selections.
+  /**
+   * Remove selected from genome.
+   */
+  deletion(genome, selection, params) {
     selection.reverse().forEach(selected => {
-      this.splice(selected, 1);
+      genome.splice(selected, 1);
     });
   },
   // Repeat, in place, contiguously selected.
