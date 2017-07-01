@@ -6,7 +6,7 @@ import { GenomeBase } from "./GenomeBase";
  * How are genes expressed?
  * i.e. What genes positions are passed to what functions?
  *
- * @export
+ * @exports Epigenome
  * @class Epigenome
  * @param {Epigenome|Array|Number|undefined} epigenome - An array of strings or a number indicating the length of the epigenome.
  * @param {String[]} [alphabet=[""]] - Strings that are available to the epigenome.

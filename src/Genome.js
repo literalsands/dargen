@@ -4,7 +4,7 @@ import {GenomeBase} from "./GenomeBase";
 /**
  * Creates a new Genome.
  *
- * @export
+ * @exports Genome
  * @class Genome
  * @param {Genome|Array|Number|undefined} genome - An array of genes or a number indicating the length of the genome.
  * @extends {GenomeBase}
