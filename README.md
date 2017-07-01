@@ -11,7 +11,9 @@ Dargen in a genetic algorithm focused on ease-of-use and magic.
   - Uses robust and simple 0 to 1 (inclusive) genome encoding.
   - Supports genome growth and deletion.
   - Effortless self-reflection.
-  - Experimental features and ideas.## Classes
+  - Experimental features and ideas.
+
+## Classes
 
 <dl>
 <dt><a href="#Individual">Individual</a></dt>
