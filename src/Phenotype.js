@@ -2,11 +2,11 @@ import flatten from "flat";
 let { unflatten } = flatten;
 
 /**
- * Simple, configurable decoder representation.
- * Contains useful methods and abstractions for interacting with Objects and Arrays filled with functions.
+ * Creates a new phenotype.
  *
  * @exports Phenotype
- * @class Phenotype
+ * @classdesc Simple, configurable decoder representation.  Contains useful methods and abstractions for interacting with Objects and Arrays filled with functions.
+ * @class
  * @param {Phenotype} - An arbitrary object containing functions.
  * @returns {Phenotype} - Returns the new Phenotype.
  */
@@ -17,6 +17,7 @@ export class Phenotype {
   /**
    * Set the arbitrary object containing functions.
    *
+   * @type {Object}
    * @memberof Phenotype
    */
   set representation(phenotype) {
@@ -25,6 +26,7 @@ export class Phenotype {
   /**
    * Representation as a flattened object.
    *
+   * @type {Object}
    * @memberof Phenotype
    */
   get representation() {
@@ -34,6 +36,7 @@ export class Phenotype {
    * Get the flattened names of functions.
    *
    * @readonly
+   * @type {string[]}
    * @memberof Phenotype
    */
   get names() {
@@ -43,6 +46,7 @@ export class Phenotype {
    * Get the combined length of all functions.
    *
    * @readonly
+   * @type {integer}
    * @memberof Phenotype
    */
   get length() {
@@ -52,6 +56,7 @@ export class Phenotype {
    * Get the length of every function.
    *
    * @readonly
+   * @type {integer[]}
    * @memberof Phenotype
    */
   get lengths() {

@@ -5,7 +5,8 @@ import {GenomeBase} from "./GenomeBase";
  * Creates a new Genome.
  *
  * @exports Genome
- * @class Genome
+ * @classdesc A simple 0 to 1, inclusive, genetic representation.
+ * @class
  * @param {Genome|Array|Number|undefined} genome - An array of genes or a number indicating the length of the genome.
  * @extends {GenomeBase}
  */
@@ -18,6 +19,7 @@ export class Genome extends GenomeBase {
   /**
    * Returns a random valid gene value.
    *
+   * @override
    * @returns Number
    * @memberof Genome
    */

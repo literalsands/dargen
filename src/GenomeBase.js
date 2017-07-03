@@ -4,7 +4,7 @@
  * @exports GenomeBase
  * @private
  * @class GenomeBase
- * @param {Genome|Array|Number|undefined} genome - An array of genes or a number indicating the length of the genome.
+ * @param {GenomeBase|Array|Number|undefined} genome - An array of genes or a number indicating the length of the genome.
  * @extends {Array}
  */
 export class GenomeBase extends Array {
@@ -33,8 +33,9 @@ export class GenomeBase extends Array {
   }
 
   /**
-   * Size is the same as length.
+   * The size of the genome.
    *
+   * @type {integer}
    * @memberof GenomeBase
    */
   get size() {
@@ -44,6 +45,7 @@ export class GenomeBase extends Array {
   /**
    * Setting size equivalent to setting length, but new positions are automatically populated with gene values.
    *
+   * @type {integer}
    * @memberof GenomeBase
    */
   set size(length) {
@@ -58,7 +60,7 @@ export class GenomeBase extends Array {
    * Sets a gene position to a random value.
    *
    * @param {integer} index
-   * @returns Genome - Genome with position filled by a random gene value.
+   * @returns {this} - Genome with position filled by a random gene value.
    * @memberof GenomeBase
    */
   toRandom(index) {
@@ -71,7 +73,7 @@ export class GenomeBase extends Array {
    *
    * @param {integer} [start=0]
    * @param {integer} [stop=this.length - 1]
-   * @returns Genome - Genome with positions filled by random gene values.
+   * @returns {this} - Genome with positions filled by random gene values.
    * @memberof GenomeBase
    */
   fillRandom(start = 0, stop = this.length - 1) {
@@ -101,7 +103,7 @@ export class GenomeBase extends Array {
    * Returns Genome.Mutations.
    *
    * @readonly
-   * @memberof Genome
+   * @memberof GenomeBase
    */
   get mutations() {
     return this.constructor.Mutations;
@@ -112,9 +114,9 @@ export class GenomeBase extends Array {
    *
    * @param {Object|Array} options - Options specifying a single mutation or an array of options as a pipeline of mutations.
    * @param {String|Function} options.mutation - Mutation name or function.
-   * @param {String|Function} options.params - .Values for the mutation.
+   * @param {Object} options.params - Parameters for the mutation.
    * @param {GenomeBase~requestMutationDetails} callback - Callback passed the mutation outcomes.
-   * @returns Genome - Returns the same genome, with mutation or mutation pipeline applied, unless specified.
+   * @returns {this} this | this.copy() - Returns the same genome, with mutation or mutation pipeline applied, unless specified.
    * @memberof GenomeBase
    */
   mutate(options, callback) {
@@ -172,7 +174,7 @@ export class GenomeBase extends Array {
    * @param {Object|Array} options - Options specifying a single crossover mechanism or an array of options as a pipeline of crossover mechanisms.
    * @param {Genome|Array|Genome[]|Array[]} mates - Genomes used in crossover.
    * @param {GenomeBase~requestCrossoverDetails} callback - Callback passed the mutation outcomes.
-   * @returns Genome - Genome created using the genes of this Genome and mates.
+   * @returns {this} this.copy() | this - Genome created using the genes of this Genome and mates.
    * @memberof GenomeBase
    */
   crossover(options, mates, callback) {
@@ -186,7 +188,7 @@ export class GenomeBase extends Array {
       modify = false,
       average = false
     } = options;
-    let child = modify ? this : this.slice();
+    let child = modify ? this : this.copy();
     // Retrieve a selection of gene indexes that will be changed.
     let selection = child.selection(crossover);
     // Set that gene equally from all parents.
@@ -214,7 +216,7 @@ export class GenomeBase extends Array {
   /**
    * Creates a shallow copy of this genome.
    *
-   * @returns Genome - A shallow copy of this genome.
+   * @returns {this} - A shallow copy of this genome.
    * @memberof GenomeBase
    */
   copy() {
@@ -239,7 +241,7 @@ export class GenomeBase extends Array {
    * Find the percentage of shared genes.
    *
    * @param {Genome|Array} genome - Genome for comparison.
-   * @returns Number - The percentage of same genes at same gene positions compared to the longest of the two genomes.
+   * @returns {Number} - The percentage of same genes at same gene positions compared to the longest of the two genomes.
    * @memberof GenomeBase
    */
   howSimilar(genome) {
@@ -257,14 +259,14 @@ export class GenomeBase extends Array {
  * @param {Genome|Array} genome - Genome to mutate.
  * @param {integer[]} selection - Genome positions to apply mutation to.
  * @param {Object} params - Mutation parameters.
+ * @returns {undefined}
  */
 GenomeBase.Mutations =  {
-  /**
-   * Remove selected from genome.
-   */
-  deletion(genome, selection, params) {
+  deletion(genome, selection, rate) {
+    let selection = this.selection(rate);
+    // Group consecutive selections.
     selection.reverse().forEach(selected => {
-      genome.splice(selected, 1);
+      this.splice(selected, 1);
     });
   },
   // Repeat, in place, contiguously selected.

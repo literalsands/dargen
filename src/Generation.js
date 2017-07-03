@@ -10,10 +10,11 @@ let { v4: getIdentifier } = uuid;
  * Holds a population or individuals at a certain iteration or of a certain number of parents.
  *
  * @exports Generation
- * @class Generation
+ * @classdesc A generational collection of inidividuals.
+ * @class
  * @param {Generation|Object} generation - Generation options.
  * @param {Generation~fitness} generation.fitness - Generational fitness function.
- * @param {Function} generation.comparison - Generational comparison function.
+ * @param {Generation~comparison} generation.comparison - Generational comparison function.
  * @param {...Population|Object} populations - Populations to incorporate in a generational selection and removal process.
  */
 export class Generation {
@@ -41,6 +42,20 @@ export class Generation {
       });
     }
   }
+  /**
+   * @typedef Generation~fitness
+   * @type {Function}
+   * @param {Individual} individual
+   * @param {Individual[]} group
+   * @returns {any|any[]} A value or array of values to be consumed by a comparison function.
+   */
+  /**
+   * @typedef Generation~comparison
+   * @type {Function}
+   * @param {any|any[]} a
+   * @param {any|any[]} b
+   * @returns {number} If greater than zero, value a will be sorted before b.
+   */
 
   _generation() {
     let groups = this._groups().map(this._tournament, this);
