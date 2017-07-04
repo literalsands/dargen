@@ -8,6 +8,7 @@
     "compile": "babel -d dist/ src/",
     "prepublish": "npm run compile",
     "test": "mocha --compilers js:babel-core/register",
+    "testDocs": "mocha --compilers js:babel-core/register --require jsdoctest src/index.js",
     "generate-docs": "node_modules/.bin/jsdoc -c jsdoc.json"
   },
   "babel": {
@@ -29,6 +30,7 @@
     "docdash": "^0.4.0",
     "eslint-plugin-react": "^7.1.0",
     "jsdoc-test": "0.0.4",
+    "jsdoctest": "git+https://git@github.com/iilab/jsdoctest.git",
     "mocha": "^3.1.2"
   }
 }

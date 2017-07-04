@@ -1,11 +1,15 @@
 import 'babel-polyfill';
 import {should, expect} from 'chai';
 import { Genome } from '../src/Genome';
+import doctest from 'jsdoc-test';
 
 should();
 
 // A Genome is the set of genes of an individual.
 describe("Genome", () => {
+  describe("DocTests", () => {
+    doctest("src/Genome.js");
+  })
   describe("constructor", () => {
     it("does not require arguments", () => {
       (() => {

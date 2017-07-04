@@ -1,4 +1,3 @@
-
 import  { Individual } from './Individual';
 import  { Genome } from './Genome';
 import  { Epigenome } from './Epigenome';

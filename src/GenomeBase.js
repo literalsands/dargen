@@ -418,11 +418,10 @@ GenomeBase.Mutations =  {
    * @function module:Mutations/Base.deletion
    * @type module:Representation#MutationMethod
    */
-  deletion(genome, selection, rate) {
-    let selection = this.selection(rate);
+  deletion(genome, selection) {
     // Group consecutive selections.
     selection.reverse().forEach(selected => {
-      this.splice(selected, 1);
+      genome.splice(selected, 1);
     });
   },
   /**

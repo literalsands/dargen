@@ -22,10 +22,7 @@ import {GenomeBase} from "./GenomeBase";
  * // Create an randomly populated Genome of a certain size from a given alphabet.
  * let genome = new Genome(6)
  * genome.size //=> 6
- * genome.every(function(gene) {
- *   return gene >=0 && gene <=1
- * })
- * //=> true
+ * genome.every(function(gene) { return gene >=0 && gene <=1; }) //=> true
  *
  * @example
  * // Genome json representation will restore to a deep copy of the object.
@@ -80,18 +77,17 @@ Genome.Mutations = Object.assign({}, GenomeBase.Mutations, {
    * @param {Object} params
    * @param {Number} params.incrememt
    */
-  increment(genome, selection, {increment}) {
-    let selection = this.selection(rate);
+  increment(genome, selection, {min=0, max=1, increment}) {
     selection.forEach(index => {
-        if (this[index] <= 0) this[index] += increment;
-        else if (this[index] >= 1) this[index] -= increment;
+        if (genome[index] <= min)
+          genome[index] = increment;
+        else if (genome[index] >= max)
+          genome[index] = max;
         else {
-          this[index] = Math.random() > 0.5
-            ? this[index] + increment
-            : this[index] - increment;
+          genome[index] = genome[index] + increment
         }
-        if (this[index] < 0) this[index] = 0;
-        if (this[index] > 1) this[index] = 1;
+        if (genome[index] < min) genome[index] = min;
+        if (genome[index] > max) genome[index] = max;
       }
     );
   },
@@ -104,18 +100,15 @@ Genome.Mutations = Object.assign({}, GenomeBase.Mutations, {
    * @param {Object} params
    * @param {Number} params.decrement
    */
-  decrement(genome, selection, {decrement}) {
-    let selection = this.selection(rate);
+  decrement(genome, selection, {min=0, max=1, decrement}) {
     selection.forEach(index => {
-        if (this[index] <= 0) this[index] += increment;
-        else if (this[index] >= 1) this[index] -= increment;
+        if (genome[index] <= min) genome[index] = min
+        else if (genome[index] >= max) genome[index] = max - increment;
         else {
-          this[index] = Math.random() > 0.5
-            ? this[index] + increment
-            : this[index] - increment;
+          genome[index] -= increment;
         }
-        if (this[index] < 0) this[index] = 0;
-        if (this[index] > 1) this[index] = 1;
+        if (genome[index] < min) genome[index] = min;
+        if (genome[index] > max) genome[index] = max;
       }
     );
   }
