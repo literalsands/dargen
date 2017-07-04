@@ -1,6 +1,7 @@
 node_modules
 dist
 doc
+docs
 out
 .vscode
 package-lock.json
