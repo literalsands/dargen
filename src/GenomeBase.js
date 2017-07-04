@@ -1,11 +1,33 @@
 /**
- * Creates a new Genome.
  *
- * @exports GenomeBase
- * @private
+ * @classdesc Extend this class to create a custom Genome type.
  * @class GenomeBase
- * @param {GenomeBase|Array|Number|undefined} genome - An array of genes or a number indicating the length of the genome.
+ * @param {Array|Number|undefined} genome - An array of genes or a number indicating the length of the genome.
  * @extends {Array}
+ *
+ * @example
+ * // Extend this class to create a new Genome type.
+ * const MyGenome = function(){};
+ * MyGenome.prototype = GenomeBase.prototype;
+ * MyGenome.prototype.constructor = GenomeBase.prototype.constructor;
+ * MyGenome.prototype.getRandomGeneValue = function() {
+ *   return "Gene";
+ * }
+ * MyGenome.Mutations = Object.assign({}, GenomeBase.Mutations, {
+ *   // Assign some unique mutations.
+ * }
+ *
+ * // The new genome behaves.
+ * let genome = new MyGenome(4) //=> ["Gene", "Gene", "Gene", "Gene"]
+ *
+ * genome.mutate({mutation: "duplication", params: {rate: 1}})
+ * genome //=> ["Gene", "Gene", "Gene", "Gene", "Gene", "Gene", "Gene", "Gene"]
+ * genome.size //=> 8
+ *
+ * genome.mutate({mutation: "deletion", params: {rate: 1}})
+ * genome //=> []
+ * genome.size //=> 0
+ *
  */
 export class GenomeBase extends Array {
 
@@ -21,33 +43,45 @@ export class GenomeBase extends Array {
   }
 
   /**
-   * Override this to create a gene type.
+   * Override this method to create a gene type.
    *
    * @abstract
    * @returns any
    * @memberof GenomeBase
+   * @example
+   * // Extend in your own class to create a genome.
+   * const DNAGenome = function(){};
+   * DNAGenome.prototype = GenomeBase.prototype;
+   * DNAGenome.prototype.getRandomGeneValue = function() {
+   *   return (Math.random()>0.5) ? "AT": "CG";
+   * }
    */
   getRandomGeneValue() {
     console.error("Not implemented.");
-    return undefined;
+    return null;
   }
 
   /**
    * The size of the genome.
    *
+   * Setting size equivalent to setting length, but new positions are automatically populated with gene values.
+   *
    * @type {integer}
    * @memberof GenomeBase
+   * @example
+   * let genome = new GenomeBase()
+   * // Size is equivalent with length.
+   * genome.size === genome.length //=> true
+   * // But, increasing the size fills the genome with random values.
+   * genome.size = 1
+   * genome.length //=> 1
+   * typeof genome[0] === typeof genome.getRandomGeneValue() //=> true
+   *
    */
   get size() {
     return this.length;
   }
 
-  /**
-   * Setting size equivalent to setting length, but new positions are automatically populated with gene values.
-   *
-   * @type {integer}
-   * @memberof GenomeBase
-   */
   set size(length) {
     let start = this.length;
     this.length = length;
@@ -62,6 +96,12 @@ export class GenomeBase extends Array {
    * @param {integer} index
    * @returns {this} - Genome with position filled by a random gene value.
    * @memberof GenomeBase
+   * @example
+   * let genome = new GenomeBase()
+   * genome.toRandom(4)
+   * // Equivalent to
+   * genome[4] = genome.getRandomGeneValue()
+   * typeof genome[4] === typeof genome.toRandom(4)[4] //=> true
    */
   toRandom(index) {
     this[index] = this.getRandomGeneValue();
@@ -75,6 +115,26 @@ export class GenomeBase extends Array {
    * @param {integer} [stop=this.length - 1]
    * @returns {this} - Genome with positions filled by random gene values.
    * @memberof GenomeBase
+   * @example
+   * let genome = new GenomeBase(4)
+   * genome.fillRandom(1, 3)
+   * // Equivalent to
+   * genome[1] = genome.getRandomGeneValue()
+   * genome[2] = genome.getRandomGeneValue()
+   * genome[3] = genome.getRandomGeneValue()
+   * @example
+   * let genome = new GenomeBase(4)
+   * genome.fillRandom(2)
+   * // Equivalent to
+   * genome[2] = genome.getRandomGeneValue()
+   * genome[3] = genome.getRandomGeneValue()
+   * @example
+   * let genome = new GenomeBase(4)
+   * genome.fillRandom(undefined, 2)
+   * // Equivalent to
+   * genome[0] = genome.getRandomGeneValue()
+   * genome[1] = genome.getRandomGeneValue()
+   * genome[2] = genome.getRandomGeneValue()
    */
   fillRandom(start = 0, stop = this.length - 1) {
     for (let i = start; i < stop + 1; i++) {
@@ -89,6 +149,11 @@ export class GenomeBase extends Array {
    * @param {number} rate
    * @returns integer[] - An array of selected gene positions.
    * @memberof GenomeBase
+   * @example
+   * let genome = new GenomeBase(4)
+   * genome.selection(1).length //=> 4
+   * genome.selection(0).length //=> 0
+   * genome.selection(1) //=> [0, 1, 2, 3]
    */
   selection(rate) {
     return this.reduce((selection, gene, i) => {
@@ -103,7 +168,16 @@ export class GenomeBase extends Array {
    * Returns Genome.Mutations.
    *
    * @readonly
+   * @type Object
+   * @property {module:Representation#MutationMethod} methodName
    * @memberof GenomeBase
+   * @example
+   * // Add new mutations by settings them as static methods of static object Mutations.
+   * GenomeBase.Mutations["addbugs"] = function(genome, selection, params) {
+   *   genome[selection[0]] = "bug"
+   * }
+   * let genome = new GenomeBase()
+   * genome.mutations.addbugs instanceof Function //=> true
    */
   get mutations() {
     return this.constructor.Mutations;
@@ -113,11 +187,33 @@ export class GenomeBase extends Array {
    * Apply mutations to genome.
    *
    * @param {Object|Array} options - Options specifying a single mutation or an array of options as a pipeline of mutations.
-   * @param {String|Function} options.mutation - Mutation name or function.
+   * @param {String|Function} options.name - Mutation name or function.
    * @param {Object} options.params - Parameters for the mutation.
    * @param {GenomeBase~requestMutationDetails} callback - Callback passed the mutation outcomes.
    * @returns {this} this | this.copy() - Returns the same genome, with mutation or mutation pipeline applied, unless specified.
    * @memberof GenomeBase
+   * @example
+   * // Mutate is a method of all Genomes.
+   * let genome = new GenomeBase()
+   * // Mutate the genome, and collect some meta information in a callback.
+   * genome.mutate({
+   *   name: "substitution",
+   *   params: {rate: 0.5}
+   * }, function(mutations, genome, mutatedGenome) {
+   *   smoothness = genome.howSimilar(mutatedGenome));
+   * })
+   *
+   * // Create a mutation pipeline.
+   * genome.mutate([
+   *   {
+   *     name: "substitution",
+   *     params: {rate: 0.1}
+   *   },
+   *   {
+   *     name: "duplication",
+   *     params: {rate: 0.05}
+   *   }
+   * ])
    */
   mutate(options, callback) {
     let {
@@ -172,10 +268,21 @@ export class GenomeBase extends Array {
    * Create a new Genome by selecting genes from multiple parents.
    *
    * @param {Object|Array} options - Options specifying a single crossover mechanism or an array of options as a pipeline of crossover mechanisms.
-   * @param {Genome|Array|Genome[]|Array[]} mates - Genomes used in crossover.
+   * @param {Array|Array[]} mates - Genomes used in crossover.
    * @param {GenomeBase~requestCrossoverDetails} callback - Callback passed the mutation outcomes.
    * @returns {this} this.copy() | this - Genome created using the genes of this Genome and mates.
    * @memberof GenomeBase
+   * @example
+   * // Crossover is a method of all Genomes.
+   * let genome = new GenomeBase()
+   * // Crossover genomes to create a child, and provide a callback to collect meta information.
+   * let otherGenomes = [new GenomeBase()]
+   * genome.crossover({
+   *   crossover: "contiguous",
+   *   params: {rate: 1 / (otherGenomes.length + 1)}
+   * }, otherGenomes, function(crossovers, parents, child) {
+   *   smoothness = genome.howSimilar(child)
+   * })
    */
   crossover(options, mates, callback) {
     // Random chance any particular gene is from either parent.
@@ -208,8 +315,8 @@ export class GenomeBase extends Array {
    * @param {Array} crossovers[].crossover - Crossover options applied.
    * @param {Array} crossovers[].selection - Positions crossover options were applied to.
    * @param {Array} crossovers[].parent_selection - Parents chosen for each crossover position.
-   * @param {Genome[]} parents - Array of parent genomes.
-   * @param {Genome} child - Child Genome.
+   * @param {this[]} parents - Array of parent genomes.
+   * @param {this} child - Child Genome.
    */
 
   /* Helper Methods */
@@ -217,7 +324,11 @@ export class GenomeBase extends Array {
    * Creates a shallow copy of this genome.
    *
    * @returns {this} - A shallow copy of this genome.
-   * @memberof GenomeBase
+   * @example
+   * // Copy is a method of all Genomes
+   * let genome = new GenomeBase()
+   * let genomeCopy = genome.copy()
+   * genomeCopy.isEqual(genome) //=> true
    */
   copy() {
     return this.slice();
@@ -226,9 +337,14 @@ export class GenomeBase extends Array {
   /**
    * Determine if this genome is equal to another.
    *
-   * @param {Genome|Array} genome - Genome for comparison.
+   * @param {Array} genome - Genome for comparison.
    * @returns boolean - The genomes have the same values at the same positions and are of the same length.
    * @memberof GenomeBase
+   * @example
+   * // isEqual is a method of all Genomes
+   * let genome = new GenomeBase([1, 2, 3])
+   * let otherGenome = [1, 2, 3]
+   * genome.isEqual(otherGenome) //=> true
    */
   isEqual(genome) {
     if (this.length !== genome.length) {
@@ -240,9 +356,21 @@ export class GenomeBase extends Array {
   /**
    * Find the percentage of shared genes.
    *
-   * @param {Genome|Array} genome - Genome for comparison.
+   * @param {Array} genome - Genome for comparison.
    * @returns {Number} - The percentage of same genes at same gene positions compared to the longest of the two genomes.
    * @memberof GenomeBase
+   * @example
+   * // howSimilar is a method of all Genomes.
+   * let genome = new GenomeBase([1, 2, 3])
+   * let otherGenome = [1, 2, 3]
+   * genome.howSimilar(otherGenome) //=> 1
+   * @example
+   * let genome = new GenomeBase([1, 2, 3])
+   * let otherGenome = [1, 2, 2, 3]
+   * // Total equivalent positions, ([0, 1] => 2)
+   * // divided by,                 (/)
+   * // max length of genomes.      (4)
+   * genome.howSimilar(otherGenome) //=> 0.5
    */
   howSimilar(genome) {
     return (
@@ -254,14 +382,42 @@ export class GenomeBase extends Array {
 
 /* Genetic mutation operators. */
 /**
+ * @module Representation
+ */
+/**
  * Extend available mutation methods.
- * @function MutationMethod
- * @param {Genome|Array} genome - Genome to mutate.
+ * @function module:Representation#MutationMethod
+ * @param {Array} genome - Genome to mutate.
  * @param {integer[]} selection - Genome positions to apply mutation to.
  * @param {Object} params - Mutation parameters.
  * @returns {undefined}
+ * @example
+ * GenomeBase.Mutations.shrink = function (genome) {
+ *   genome.size = genome.size - 1
+ * }
+ *
+ * @example
+ * Genome = function() {}
+ * BioGenome.prototype = GenomeBase.prototype
+ * BioGenome.Mutations = Object.assign({}, GenomeBase.Mutations, {
+ *   flip: function (genome, selection) {
+ *     selection.forEach(function(genePosition) {
+ *       genome[genePosition] = genome[genePosition] === "AT"
+ *         ? "CG"
+ *         : "AT"
+ *     }
+ *   }
+ * }
+ */
+/**
+ * @module Mutations/Base
  */
 GenomeBase.Mutations =  {
+  /**
+   * Simple deletion.
+   * @function module:Mutations/Base.deletion
+   * @type module:Representation#MutationMethod
+   */
   deletion(genome, selection, rate) {
     let selection = this.selection(rate);
     // Group consecutive selections.
@@ -269,7 +425,11 @@ GenomeBase.Mutations =  {
       this.splice(selected, 1);
     });
   },
-  // Repeat, in place, contiguously selected.
+  /**
+   * Repeat, in place, contiguously selected gene positions.
+   * @function module:Mutations/Base.duplication
+   * @type module:Representation#MutationMethod
+   */
   duplication(rate) {
     let selection = this.selection(rate),
       groupedSelection = selection.reduce(
@@ -288,7 +448,11 @@ GenomeBase.Mutations =  {
       this.splice(group[0], 0, ...group.map(i => this[i]));
     });
   },
-  // Invert, in place, contiguously selected.
+  /**
+   * Invert, in place, contiguously selected gene positions.
+   * @function module:Mutations/Base.inversion
+   * @type module:Representation#MutationMethod
+   */
   inversion(rate) {
     let selection = this.selection(rate),
       groupedSelection = selection.reduce(
@@ -311,7 +475,11 @@ GenomeBase.Mutations =  {
       this.splice(group[0], group.length, ...group.reverse().map(i => this[i]));
     });
   },
-  // Set selected to a random value.
+  /**
+   * Set selected genes to a random value.
+   * @function module:Mutations/Base.substitution
+   * @type module:Representation#MutationMethod
+   */
   substitution(rate) {
     let selection = this.selection(rate);
     selection.forEach(selected => {

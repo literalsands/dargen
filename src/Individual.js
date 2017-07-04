@@ -75,20 +75,28 @@ export class Individual {
 
   /**
    * Phenotype for the individual.
+   * Set phenotype, enforce type, and grow genome size to phenotype length.
    *
-   * @type {Phenotype}
+   * @type {Phenotype|Object}
    * @memberof Individual
+   * @example
+   * // The phenotype is converted into a phenotype if it isn't already.
+   * let individual = new Individual()
+   * individual.phenotype = {name: "Green"}
+   * individual.phenotype instanceof Phenotype //=> true
+   * @example
+   * // Setting the phenotype can change the genome and epigenome if they aren't already set.
+   * let individual = new Individual()
+   * individual.phenotype = {name: (color) => "Rainbow"}
+   * individual.phenotype.length //=> 1
+   * individual.genome.length //=> 1
+   * individual.epigenome.length //=> 1
+   * individual.epigenome[0] //=> "name"
    */
   get phenotype() {
     return this._phenotype;
   }
 
-  /**
-   * Set phenotype, enforce type, and grow genome size to phenotype length.
-   *
-   * @type {Phenotype|Object}
-   * @memberof Individual
-   */
   set phenotype(phenotype) {
     if (!(phenotype instanceof Phenotype)) {
       phenotype = new Phenotype(phenotype);
@@ -151,17 +159,6 @@ export class Individual {
     return traits;
   }
 
-  /**
-   * Call function on individual's traits.
-   *
-   * @param {Function} func
-   * @returns any
-   * @memberof Individual
-   */
-  evaluate(func) {
-    return func(this.traits);
-  }
-
   /* Genetic operators */
 
   /**
@@ -171,6 +168,25 @@ export class Individual {
    *
    * @returns {this}
    * @memberof Individual
+   *
+   * @example
+   * let individual = new Individual();
+   * individual.mutate()
+   * @example
+   * // Influence mutations through phenotype mutate.
+   * let individual = new Individual({
+   *   phenotype: {
+   *     mutation: {
+   *       name: "incrementation",
+   *       params: {
+   *         // Genome determines the increment.
+   *         increment: (v) => v * 0.1
+   *         rate: 0.1
+   *       }
+   *     }
+   *   }
+   * });
+   * individual.mutate()
    */
   mutate() {
     this.genome.mutate(this.traits.mutate);
@@ -185,6 +201,23 @@ export class Individual {
    * @param {...Individual} mates - Individuals to exchange genes with.
    * @returns {this} - A new child Individual using genes from this Individual and mates.
    * @memberof Individual
+   *
+   * @example
+   * let individual = new Individual();
+   * let mates = [new Individual()];
+   * individual.crossover(...mates)
+   * @example
+   * // Influence crossover through phenotype crossover.
+   * let individual = new Individual({
+   *   phenotype: {
+   *     crossover: {
+   *       name: "contiguous",
+   *       params: {rate: 0.3}
+   *     }
+   *   }
+   * });
+   * let mates = [new Individual()];
+   * individual.crossover(...mates)
    */
   crossover(...mates) {
     var childGenome = this.genome.crossover(
