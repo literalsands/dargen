@@ -1,6 +1,6 @@
 # Why Dargen?
 
-Dargen in a genetic algorithm focused on ease-of-use and magic.
+Dargen is a genetic algorithm focused on ease-of-use and magic.
 
   - Just create the decoder.
     - Supply arbitrarily shaped objects with functions.
@@ -8,7 +8,9 @@ Dargen in a genetic algorithm focused on ease-of-use and magic.
   - Don’t worry too much about the mutation and crossover mechanisms.
     - Or, take full control and easily create mutation and crossover pipelines.
     - Mutation and crossover pipelines can be unique to the individual and determined according to their genome.
-  - Uses robust and simple 0 to 1 (inclusive) genome encoding.
+  - By default, uses robust and simple 0 to 1 (inclusive) genome encoding.
+    - Extend the Genome to use different encodings.
+    - Extend Genome.Mutations to add new mutation methods.
   - Supports genome growth and deletion.
-  - Effortless self-reflection.
-  - Experimental features and ideas.
+  - Effortless self-reflection in mutation and crossover.
+  - Great for testing out experimental features and ideas.
