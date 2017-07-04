@@ -1,1 +1,6 @@
 dir: src
+articles:
+  Overview: README.md
+branches:
+  - master
+packageJson: package.json
