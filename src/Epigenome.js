@@ -106,6 +106,30 @@ export class Epigenome extends GenomeBase {
   }
 
   /**
+   * Extends gene selection to return all positions of a string value when given a string.
+   *
+   * @param {object|string|integer[]|number} [options]
+   * @param {number} [options.start]
+   * @param {number} [options.stop]
+   * @param {object|integer[]|number|string} [options.selection]
+   * @returns integer[] - An array of selected gene positions.
+   * @memberof Epigenome
+   * @example
+   * let epigenome = new Epigenome(["A", "A", "B"])
+   * epigenome.selection("A") //=> [0, 1]
+   * epigenome.selection("B") //=> [2]
+   * epigenome.selection("C") //=> []
+   */
+  selection(options) {
+    return (typeof options === "string")
+      // Positions that equal options string.
+      ? this.keys().filter((position) => {
+        this[position] === options;
+      })
+      : super.selection(options);
+  }
+
+  /**
    * Compile genome positions to arguments arrays using marker names.
    *
    * @param {Genome|Array} genome

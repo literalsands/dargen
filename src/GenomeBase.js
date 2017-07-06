@@ -1,3 +1,4 @@
+import { intersection } from "lodash";
 /**
  *
  * @classdesc Extend this class to create a custom Genome type.
@@ -30,7 +31,6 @@
  *
  */
 export class GenomeBase extends Array {
-
   constructor(genes) {
     if (Number.isSafeInteger(genes) && genes >= 0) {
       super();
@@ -144,31 +144,92 @@ export class GenomeBase extends Array {
   }
 
   /**
+   * @typedef GenomeBase~SelectionOptions
+   * @type {object|integer[]|number}
+   * @property {number} [rate]
+   * @property {integer} [start]
+   * @property {integer} [stop]
+   * @property {Genomebase~SelectionOptions} [selection]
+   *
+  /**
    *  Select genes at a certain rate.
    *
-   * @param {number} rate
+   * @param {GenomeBase~SelectionOptions} [options]
    * @returns integer[] - An array of selected gene positions.
    * @memberof GenomeBase
    * @example
+   * // Select using a rate.
    * let genome = new GenomeBase(4)
    * genome.selection(1).length //=> 4
    * genome.selection(0).length //=> 0
    * genome.selection(1) //=> [0, 1, 2, 3]
+   * @example
+   * // Select using options.
+   * let genome = new GenomeBase(6)
+   * genome.selection({
+   *   start: 2,
+   * }) //=> [2, 3, 4, 5]
+   * genome.selection({
+   *   stop: 2,
+   * }) //=> [0, 1]
+   * genome.selection({
+   *   selection: [0, 1, 3, 5, 7],
+   * }) //=> [0, 1, 3, 5]
+   * genome.selection({
+   *   rate: 0,
+   *   selection: [0, 1, 3, 5, 7],
+   * }) //=> []
+   * genome.selection({
+   *   rate: 1,
+   *   start: 2,
+   *   stop: 6,
+   *   selection: [0, 1, 3, 5, 7],
+   * }) //=> [3, 5]
+   * @example
+   * // Select using a selection.
+   * let genome = new GenomeBase(2)
+   * // Selected positions that aren't in the genome are removed.
+   * genome.selection([0, 4, 8]) //=> [0]
+   * @example
+   * // Returns all positions
+   * let genome = new GenomeBase(2)
+   * genome.selection() //=> [0, 1]
    */
-  selection(rate) {
-    return this.reduce((selection, gene, i) => {
-      if (Math.random() <= rate) {
-        selection.push(i);
-      }
-      return selection;
-    }, []);
+  selection(options = 1) {
+    if (typeof options === "number") {
+      return this.reduce((selection, gene, i) => {
+        if (Math.random() <= options) {
+          selection.push(i);
+        }
+        return selection;
+      }, []);
+    }
+    if (Array.isArray(options)) {
+      return options.filter(
+        position => position >= 0 && position < this.length
+      );
+    }
+    if (typeof options === "object") {
+      let {
+        rate = undefined,
+        start = undefined,
+        stop = undefined,
+        selection = undefined
+      } = options;
+      // TODO:REVISE This is a naive and probably quite slow implementation.
+      return intersection(
+        this.selection(rate),
+        Array.from(this.keys()).slice(start, stop),
+        this.selection(selection)
+      );
+    }
   }
 
   /**
    * Returns Genome.Mutations.
    *
    * @readonly
-   * @type Object
+   * @type object
    * @property {module:Representation#MutationMethod} methodName
    * @memberof GenomeBase
    * @example
@@ -186,10 +247,14 @@ export class GenomeBase extends Array {
   /**
    * Apply mutations to genome.
    *
-   * @param {Object|Array} options - Options specifying a single mutation or an array of options as a pipeline of mutations.
-   * @param {String|Function} options.name - Mutation name or function.
-   * @param {Object} options.params - Parameters for the mutation.
-   * @param {GenomeBase~requestMutationDetails} callback - Callback passed the mutation outcomes.
+   * @param {object|Array} options - Options specifying a single mutation or an array of options as a pipeline of mutations.
+   * @param {String} options.name - Mutation name.
+   * @param {GenomeBase~SelectionOptions} options.selection - Selection opetions.
+   * @param {object} [options.params] - Parameters for the mutation.
+   * @param {boolean} [options.modify=true] - Whether the mutation will modify this genome or return a mutated copy.
+   * @param {object} [options.lower=0] - Lower limit for genome size.
+   * @param {} [options.upper=Infinity] - Upper limit for genome size.
+   * @param {GenomeBase~requestMutationDetails} [callback] - Callback passed the mutation outcomes.
    * @returns {this} this | this.copy() - Returns the same genome, with mutation or mutation pipeline applied, unless specified.
    * @memberof GenomeBase
    * @example
@@ -216,33 +281,30 @@ export class GenomeBase extends Array {
    * ])
    */
   mutate(options, callback) {
+    if (Array.isArray(options)) {
+      // Call this function a bunch of times with a collector callback if the callback exists.
+      options.forEach(mutationOptions => this.mutate(mutationOptions));
+    }
+
     let {
-      deletion = 0,
-      duplication = 0,
-      inversion = 0,
-      incrementation = 0,
-      increment = 0,
-      substitution = 0.0,
+      name,
+      selection = undefined,
+      params = undefined,
       modify = true,
       upper = Infinity,
       lower = 1
-    } = options || {};
+    } =
+      options || {};
     let genome = modify ? this : this.copy();
-    // Chance to duplicate something.
-    // Duplication limitations.
-    genome._duplication(duplication);
-    // Chance to inverse a section.
-    // Inverse limitations.
-    genome._inversion(inversion);
-    // Chance for substitution.
-    // Substitution limitations.
-    genome._substitution(substitution);
-    // Chance for deletion.
-    // Deletion limitations.
-    genome._deletion(deletion);
-    // Chance for incrementation.
-    // Amount to increment.
-    genome._incrementation(incrementation, increment);
+
+    let capturedSelection = genome.selection(selection);
+    let capturedGenome = genome.copy();
+    genome.mutations[name](
+      genome,
+      capturedSelection,
+      Object.assign({ lower, upper }, params)
+    );
+
     // Truncate the genome to the max size.
     if (Number.isFinite(upper) && genome.size > upper) {
       genome.size = upper;
@@ -267,8 +329,8 @@ export class GenomeBase extends Array {
   /**
    * Create a new Genome by selecting genes from multiple parents.
    *
-   * @param {Object|Array} options - Options specifying a single crossover mechanism or an array of options as a pipeline of crossover mechanisms.
-   * @param {Array|Array[]} mates - Genomes used in crossover.
+   * @param {object|Array} options - Options specifying a single crossover mechanism or an array of options as a pipeline of crossover mechanisms.
+   * @param {GenomeBase|Array[]} mates - Genome or Genomes used in crossover.
    * @param {GenomeBase~requestCrossoverDetails} callback - Callback passed the mutation outcomes.
    * @returns {this} this.copy() | this - Genome created using the genes of this Genome and mates.
    * @memberof GenomeBase
@@ -290,16 +352,18 @@ export class GenomeBase extends Array {
     // Genes retain position or not.
     // Splice or average splice.
     // Crossover is sectional or uniform.
+    // If mates is not in an Array or mates
+    if (mates instanceof GenomeBase) mates = [mates];
     let {
-      crossover = 1 - 1 / mates.length,
+      selection = 1 - 1 / mates.length,
       modify = false,
       average = false
     } = options;
     let child = modify ? this : this.copy();
     // Retrieve a selection of gene indexes that will be changed.
-    let selection = child.selection(crossover);
+    let captureSelection = child.selection(selection);
     // Set that gene equally from all parents.
-    selection.forEach(selected => {
+    captureSelection.forEach(selected => {
       let geneMate = mates[Math.floor(Math.random() * mates.length)];
       // If mate doesn't contain gene length, abort.
       let cross = geneMate.length > selected
@@ -389,7 +453,7 @@ export class GenomeBase extends Array {
  * @function module:Representation#MutationMethod
  * @param {Array} genome - Genome to mutate.
  * @param {integer[]} selection - Genome positions to apply mutation to.
- * @param {Object} params - Mutation parameters.
+ * @param {object} params - Mutation parameters.
  * @returns {undefined}
  * @example
  * GenomeBase.Mutations.shrink = function (genome) {
@@ -412,26 +476,27 @@ export class GenomeBase extends Array {
 /**
  * @module Mutations/Base
  */
-GenomeBase.Mutations =  {
+GenomeBase.Mutations = {
   /**
    * Simple deletion.
    * @function module:Mutations/Base.deletion
-   * @type module:Representation#MutationMethod
+   * @type {module:Representation#MutationMethod}
    */
-  deletion(genome, selection) {
-    // Group consecutive selections.
+  deletion(genome, selection, { lower }) {
     selection.reverse().forEach(selected => {
-      genome.splice(selected, 1);
+      if (genome.length > lower) {
+        genome.splice(selected, 1);
+      }
     });
   },
   /**
    * Repeat, in place, contiguously selected gene positions.
    * @function module:Mutations/Base.duplication
-   * @type module:Representation#MutationMethod
+   * @type {module:Representation#MutationMethod}
    */
-  duplication(rate) {
-    let selection = this.selection(rate),
-      groupedSelection = selection.reduce(
+  duplication(genome, selection) {
+    selection
+      .reduce(
         (groups, selected) => {
           let currentGroup = groups[groups.length - 1];
           if (currentGroup[currentGroup.length - 1] === selected - 1) {
@@ -442,24 +507,27 @@ GenomeBase.Mutations =  {
           return groups;
         },
         [[]]
-      );
-    groupedSelection.reverse().forEach(group => {
-      this.splice(group[0], 0, ...group.map(i => this[i]));
-    });
+      )
+      .reverse()
+      .forEach(group => {
+        genome.splice(group[0], 0, ...group.map(i => genome[i]));
+      });
   },
   /**
    * Invert, in place, contiguously selected gene positions.
    * @function module:Mutations/Base.inversion
-   * @type module:Representation#MutationMethod
+   * @type {module:Representation#MutationMethod}
    */
-  inversion(rate) {
-    let selection = this.selection(rate),
-      groupedSelection = selection.reduce(
+  inversion(genome, selection) {
+    selection
+      // Group selections
+      .reduce(
         (groups, selected) => {
           let currentGroup = groups[groups.length - 1];
           if (currentGroup[currentGroup.length - 1] === selected - 1) {
             currentGroup.push(selected);
           } else {
+            // Ignore a group that only contains one member.
             if (currentGroup.length === 1) {
               currentGroup[0] = selected;
             } else {
@@ -469,20 +537,23 @@ GenomeBase.Mutations =  {
           return groups;
         },
         [[]]
-      );
-    groupedSelection.forEach(group => {
-      this.splice(group[0], group.length, ...group.reverse().map(i => this[i]));
-    });
+      )
+      .forEach(group => {
+        genome.splice(
+          group[0],
+          group.length,
+          ...group.reverse().map(i => genome[i])
+        );
+      });
   },
   /**
    * Set selected genes to a random value.
    * @function module:Mutations/Base.substitution
-   * @type module:Representation#MutationMethod
+   * @type {module:Representation#MutationMethod}
    */
-  substitution(rate) {
-    let selection = this.selection(rate);
+  substitution(genome, selection) {
     selection.forEach(selected => {
-      this.toRandom(selected);
+      genome.toRandom(selected);
     });
   }
-}
+};

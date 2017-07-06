@@ -1,5 +1,5 @@
 import { getRandomInt } from "./helpers";
-import {GenomeBase} from "./GenomeBase";
+import { GenomeBase } from "./GenomeBase";
 
 /**
  * Creates a new Genome.
@@ -32,7 +32,6 @@ import {GenomeBase} from "./GenomeBase";
  *
  */
 export class Genome extends GenomeBase {
-
   constructor(genes) {
     super(genes);
   }
@@ -71,45 +70,41 @@ Genome.Mutations = Object.assign({}, GenomeBase.Mutations, {
   /**
    * Apply increment to selected.
    * @function module:Mutations/Unit.increment
-   * @type module:Representation#MutationMethod
+   * @type {module:Representation#MutationMethod}
    * @param {Genome} genome
    * @param {integer[]} selection
    * @param {Object} params
    * @param {Number} params.incrememt
    */
-  increment(genome, selection, {min=0, max=1, increment}) {
+  increment(genome, selection, { min = 0, max = 1, increment }) {
     selection.forEach(index => {
-        if (genome[index] <= min)
-          genome[index] = increment;
-        else if (genome[index] >= max)
-          genome[index] = max;
-        else {
-          genome[index] = genome[index] + increment
-        }
-        if (genome[index] < min) genome[index] = min;
-        if (genome[index] > max) genome[index] = max;
+      if (genome[index] <= min) genome[index] = increment;
+      else if (genome[index] >= max) genome[index] = max;
+      else {
+        genome[index] = genome[index] + increment;
       }
-    );
+      if (genome[index] < min) genome[index] = min;
+      if (genome[index] > max) genome[index] = max;
+    });
   },
   /**
    * Apply decrement to selected.
    * @function module:Mutations/Unit.decrement
-   * @type module:Representation#MutationMethod
+   * @type {module:Representation#MutationMethod}
    * @param {Genome} genome
    * @param {integer[]} selection
    * @param {Object} params
    * @param {Number} params.decrement
    */
-  decrement(genome, selection, {min=0, max=1, decrement}) {
+  decrement(genome, selection, { min = 0, max = 1, decrement }) {
     selection.forEach(index => {
-        if (genome[index] <= min) genome[index] = min
-        else if (genome[index] >= max) genome[index] = max - increment;
-        else {
-          genome[index] -= increment;
-        }
-        if (genome[index] < min) genome[index] = min;
-        if (genome[index] > max) genome[index] = max;
+      if (genome[index] <= min) genome[index] = min;
+      else if (genome[index] >= max) genome[index] = max - decrement;
+      else {
+        genome[index] -= decrement;
       }
-    );
+      if (genome[index] < min) genome[index] = min;
+      if (genome[index] > max) genome[index] = max;
+    });
   }
-})
+});
