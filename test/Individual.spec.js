@@ -2,95 +2,12 @@ import "babel-polyfill";
 import { should, expect, config } from "chai";
 import { Individual } from "../src/Individual";
 import { Genome } from "../src/Genome";
+import { Epigenome } from "../src/Epigenome";
+import { Phenotype } from "../src/Phenotype";
 
 config.includeStack = true;
 should();
 
-describe("PhenotypeHelpers", () => {});
-describe("Epigenome", () => {
-  let epigenome;
-  beforeEach(() => {
-    epigenome = new Epigenome([
-      'color',
-      'color',
-      'color',
-      'font.size',
-      'font.lineHeight',
-      'font.family',
-      'font.family',
-      'font.family'
-    ]);
-  });
-  describe("constructor", () => {
-    it("requires arguments", () => {
-      (() => {
-        new Epigenome();
-      }).should.throw(Error);
-    });
-    it("takes an array argument", () => {
-      (() => {
-        new Epigenome({});
-      }).should.throw(Error);
-      (() => {
-        new Epigenome(4);
-      }).should.throw(Error);
-      (() => {
-        new Epigenome(function(){});
-      }).should.throw(Error);
-      (() => {
-        new Enigenome([]);
-      }).should.not.throw(Error);
-    });
-  });
-  describe("json", () => {
-    it("outputs a string", () => {
-      JSON.stringify(epigenome).should.be.a("string");
-    });
-    it("should output a JSON object", () => {
-      JSON.parse(JSON.stringify(epigenome)).should.be.an("object");
-    });
-    it("should parse to an equivalent epigenome", () => {
-      let stringifiedEpigenome = JSON.stringify(epigenome);
-      let parsedEpigenome = JSON.parse(stringifiedEpigenome);
-      new Epigenome(parsedEpigenome).should.deep.equal(epigenome);
-    });
-  });
-  describe("mutate", () => {
-    it("modifies the epigenome")
-    it("doesn't modify the epigenome when asked")
-    describe("substitution", () => {
-      it("doesn't modify the epigenome")
-    })
-    describe("duplication", () => {
-      it("modifies the epigenome")
-      it("increases the occurrence of duplicated genes")
-    })
-    describe("inverse", () => {
-      it("modifies the epigenome")
-      it("doesn't change the occurrence of inverted genes")
-    })
-    describe("deletion", () => {
-      it("modifies the epigenome")
-      it("decreases the occurrence of deleted genes")
-    })
-    describe("icrementation", () => {
-      it("doesn't modify the epigenome")
-    })
-    describe("gravity", () => {
-      it("doesn't modify the epigenome")
-    })
-    describe("fuzzy mutations", () => {
-      it("doesn't modify the epigenome")
-    })
-    describe("computed gradient mutations", () => {
-      it("doesn't modify the epigenome")
-    })
-  });
-  describe("crossover", () => {
-    it("produces a modified epigenome when parent epigenome's crossover position values differ.")
-    it("simply copies the epigenome when parents crossover positions are identical")
-  });
-});
 describe("Individual", () => {
   describe("constructor", () => {
     it("doesn't requires arguments", () => {

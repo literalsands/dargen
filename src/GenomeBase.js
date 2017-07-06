@@ -435,12 +435,24 @@ export class GenomeBase extends Array {
    * // divided by,                 (/)
    * // max length of genomes.      (4)
    * genome.howSimilar(otherGenome) //=> 0.5
+   * @example
+   * let genome = new GenomeBase()
+   * // Avoids NaN if divide by zero.
+   * genome.howSimilar([]) //=> 1
    */
   howSimilar(genome) {
-    return (
-      this.reduce((n, v, i) => (this[i] === genome[i] ? n + 1 : n), 0) /
-      (this.length > genome.length ? this.length : genome.length)
-    );
+    return this === genome
+      ? // Return 1 if self.
+        1
+      : // Return 1 if both lengths are 0. Avoid NaN.
+        this.length === 0 && genome.length === 0
+        ? 1
+        : // Return 0 if one length is zero.
+          this.length === 0 || genome.length === 0
+          ? 0
+          : // Sum number of same positions.
+            this.reduce((n, v, i) => (this[i] === genome[i] ? n + 1 : n), 0) /
+              (this.length > genome.length ? this.length : genome.length);
   }
 }
 

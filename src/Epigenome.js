@@ -39,10 +39,10 @@ import { GenomeBase } from "./GenomeBase";
  */
 export class Epigenome extends GenomeBase {
   constructor(epigenome, alphabet=[]) {
-    if (Number.isSafeInteger(genes) && genes >= 0) {
+    if (Number.isSafeInteger(epigenome) && epigenome >= 0) {
       super();
       this._alphabet = alphabet;
-      this.size = genes;
+      this.size = epigenome;
     }
     super(epigenome);
     this._alphabet = alphabet;

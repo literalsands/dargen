@@ -49,11 +49,11 @@ export class Individual {
       phenotype
     } = options);
 
-    if (!this.genome instanceof Genome) {
-      this.genome = new Genome(this.genome);
-    }
     if (phenotype !== undefined) {
       this.phenotype = phenotype;
+    }
+    if (!this.genome instanceof Genome) {
+      this.genome = new Genome(this.genome);
     }
     if (!this.epigenome instanceof Epigenome) {
       this.epigenome = new Epigenome(this.epigenome);
