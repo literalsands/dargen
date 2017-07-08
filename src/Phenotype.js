@@ -7,7 +7,7 @@ let { unflatten } = flatten;
  * @exports Phenotype
  * @classdesc Simple, configurable decoder representation.  Contains useful methods and abstractions for interacting with Objects and Arrays filled with functions.
  * @class
- * @param {Phenotype} - An arbitrary object containing functions.
+ * @param {Phenotype|object|function} - An arbitrary object containing functions or a function.
  * @returns {Phenotype} - Returns the new Phenotype.
  */
 export class Phenotype {
@@ -15,20 +15,20 @@ export class Phenotype {
     this.representation = phenotype;
   }
   /**
-   * Set the arbitrary object containing functions.
+   * Set the arbitrary object containing functions, or set the single function.
    *
-   * @type {object}
+   * The representation is flattened.
+   *
+   * @type {object|function}
    * @memberof Phenotype
    */
   set representation(phenotype) {
-    this._representation = flatten(phenotype);
+    this._representation =
+      phenotype instanceof Function
+        ? phenotype
+        : phenotype instanceof Object ? flatten(phenotype) : {}; // TODO Not fail so silently?
   }
-  /**
-   * Representation as a flattened object.
-   *
-   * @type {object}
-   * @memberof Phenotype
-   */
+
   get representation() {
     return this._representation || {};
   }
@@ -52,7 +52,9 @@ export class Phenotype {
    * @memberof Phenotype
    */
   get length() {
-    return Object.values(this.lengths).reduce((sum, length) => sum + length, 0);
+    return this.representation instanceof Function
+      ? this.representation.length
+      : Object.values(this.lengths).reduce((sum, length) => sum + length, 0);
   }
   /**
    * Get the length of every function.
@@ -62,14 +64,16 @@ export class Phenotype {
    * @memberof Phenotype
    */
   get lengths() {
-    return this.names.reduce((lengths, name) =>
-      Object.assign(
-        lengths,
-        this.representation[name] instanceof Function
-          ? { [name]: this.representation[name].length }
-          : {}
-      )
-    , {});
+    return this.names.reduce(
+      (lengths, name) =>
+        Object.assign(
+          lengths,
+          this.representation[name] instanceof Function
+            ? { [name]: this.representation[name].length }
+            : {}
+        ),
+      {}
+    );
   }
   /**
    * Apply an Object of name keys and argument values to the representation.
@@ -84,26 +88,28 @@ export class Phenotype {
       funcArgs = thisArg;
       thisArg = undefined;
     }
-    return unflatten(
-      Object.assign(
-        {},
-        this.representation,
-        Object.keys(funcArgs).reduce(
-          (repr, name) =>
-            Object.assign(
-              repr,
-              this.representation[name] instanceof Function
-                ? {
-                    [name]: this.representation[name].apply(
-                      thisArg,
-                      funcArgs[name]
-                    )
-                  }
-                : {}
-            ),
-          {}
-        )
-      )
-    );
+    return this.representation instanceof Function
+      ? this.representation.apply(thisArg, (Array.isArray(funcArgs)? funcArgs: [funcArgs]))
+      : unflatten(
+          Object.assign(
+            {},
+            this.representation,
+            Object.keys(funcArgs).reduce(
+              (repr, name) =>
+                Object.assign(
+                  repr,
+                  this.representation[name] instanceof Function
+                    ? {
+                        [name]: this.representation[name].apply(
+                          thisArg,
+                          funcArgs[name]
+                        )
+                      }
+                    : {}
+                ),
+              {}
+            )
+          )
+        );
   }
 }

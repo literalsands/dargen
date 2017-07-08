@@ -1,9 +1,13 @@
 import { Genome } from "./Genome";
+import { GenomeBase } from "./GenomeBase";
 import { Epigenome } from "./Epigenome";
 import { Phenotype } from "./Phenotype";
 import uuid from "node-uuid";
 let { v4: getIdentifier } = uuid;
 
+const DefaultPhenotype = new Phenotype(function() {
+  return this;
+})
 /**
  * Create a new Individual
  *
@@ -49,18 +53,16 @@ export class Individual {
       phenotype
     } = options);
 
-    if (phenotype !== undefined) {
-      this.phenotype = phenotype;
-    }
-    if (!this.genome instanceof Genome) {
+    if (!(this.genome instanceof Genome)) {
       this.genome = new Genome(this.genome);
     }
-    if (!this.epigenome instanceof Epigenome) {
+    if (!(this.epigenome instanceof Epigenome)) {
       this.epigenome = new Epigenome(this.epigenome);
     }
+    this.phenotype = phenotype;
   }
 
-/**
+  /**
  * @typedef Individual~json
  * @type {Object}
  * @property {String} [identifier=`i-${getIdentifier()}`] - A unique string for the individual. Automatically populated by UUID or genome.
@@ -92,21 +94,57 @@ export class Individual {
    * individual.genome.length //=> 1
    * individual.epigenome.length //=> 1
    * individual.epigenome[0] //=> "name"
+   *
+   * @example
+   * let individual = new Individual({genome: [0, 1, 0.5]})
+   * individual.traits //=> [0, 1, 0.5]
    */
   get phenotype() {
     return this._phenotype;
   }
 
   set phenotype(phenotype) {
-    if (!(phenotype instanceof Phenotype)) {
-      phenotype = new Phenotype(phenotype);
-    }
-    let phenotype_length = phenotype.length;
-    // Create genome minimum for arrays.
-    if (this.genome.size < phenotype_length) {
-      this.genome.size = phenotype_length;
-    }
-    this._phenotype = phenotype;
+    // Set phenotype to be a Phenotype object.
+    this._phenotype =
+      phenotype instanceof Phenotype
+      ? phenotype
+      : phenotype !== undefined
+      ? new Phenotype(phenotype)
+      : DefaultPhenotype;
+    // Set default genome and epigenome based off of phenotype.
+    this._default_genome = new Genome(this._phenotype.length);
+    let epigenome = Object.entries(
+      this._phenotype.lengths
+    ).reduce((epigenome, [name, length]) =>
+      epigenome.fill(name, epigenome.length, epigenome.length + length), []
+    );
+    this._default_epigenome = new Epigenome(epigenome, this._phenotype.names);
+  }
+
+  get epigenome() {
+    return this._epigenome instanceof Epigenome
+      ? this._epigenome
+      : this._default_epigenome;
+  }
+
+  set epigenome(epigenome) {
+    this._epigenome =
+      epigenome instanceof Epigenome
+        ? epigenome
+        : Array.isArray(epigenome) ? new Epigenome(epigenome) : undefined;
+  }
+
+  get genome() {
+    return this._genome instanceof GenomeBase
+      ? this._genome
+      : this._default_genome;
+  }
+
+  set genome(genome) {
+    this._genome =
+      genome instanceof Genome
+        ? genome
+        : Array.isArray(genome) ? new Genome(genome) : undefined;
   }
 
   /* Setup Individual using configuration object */
@@ -135,11 +173,11 @@ export class Individual {
    *     ]
    *   }
    * )
-   * 
+   *
    * // The traits are the decoded output.
-   * 
+   *
    * individual.traits // =>
-   * 
+   *
    * {
    *   color: "rgb(0.1, 0.5, 0.4)",
    *   // color: `rgb(${[0.1, 0.5, 0.4].join(',')})`,
@@ -155,7 +193,10 @@ export class Individual {
    */
   get traits() {
     // this.phenotype.apply(undefined, this.epigenome.compile(this.genome))
-    let traits = this._phenotype();
+    let traits = this.phenotype.apply(
+      this.genome,
+      this.epigenome.compile(this.genome)
+    );
     return traits;
   }
 
@@ -189,7 +230,10 @@ export class Individual {
    * individual.mutate()
    */
   mutate() {
-    this.genome.mutate(this.traits.mutate);
+    this.genome.mutate(this.traits.mutate || {
+      name: "substitution",
+      selection: 0.05
+    });
     return this;
   }
 

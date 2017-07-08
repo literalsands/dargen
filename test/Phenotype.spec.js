@@ -44,6 +44,11 @@ describe("Phenotype", () => {
       });
       expect(phenotype.representation).to.eql({ "boo.Boo.BOO": "BOOM" });
     });
+    it("can represent a single function", () => {
+      let func = function() {return "floo"};
+      phenotype = new Phenotype(func)
+      expect(phenotype.representation).to.equal(func);
+    })
   });
   describe("names", () => {
     beforeEach(() => {
@@ -68,6 +73,9 @@ describe("Phenotype", () => {
         "boo.Doo.1"
       ])
     })
+    it("returns an empty array for an array for a function representation", () => {
+      expect(new Phenotype(function(){}).names).to.eql([]);
+    })
   });
   describe("length", () => {
     beforeEach(() => {
@@ -87,6 +95,9 @@ describe("Phenotype", () => {
     it("returns length of functions", () => {
       expect(phenotype.length).to.equal(4);
     });
+    it("returns length of function for function representation", () => {
+      expect(new Phenotype(function(a, b, c){}).length).to.equal(3);
+    })
     it("returns length of described functions");
   });
   describe("lengths", () => {
@@ -116,7 +127,10 @@ describe("Phenotype", () => {
         f3: 0
       });
     });
-    it("returns an array of described function lengths");
+    it("returns an empty object for function representation", () => {
+      expect(new Phenotype(function(){}).lengths).to.eql({})
+    })
+    it("returns an object of described function lengths");
   });
   describe("apply", () => {
       beforeEach(() => {
@@ -131,7 +145,7 @@ describe("Phenotype", () => {
         },
         a1: [1, 2, 3]
       })
-      })
+    })
     it("must take one array argument", () => {
       expect(() => {
         phenotype.apply()
@@ -196,5 +210,29 @@ describe("Phenotype", () => {
         a1: [1, 2, 3]
       })
     });
+    it("calls function representation with entire context", () => {
+      // Takes a compiled epigenome.
+      let values = {
+        f1: [1, 3, 7],
+        f2: [0],
+        "o1.f3": [2, 3, 3],
+        "o1.f4": []
+      }
+      // And just consumes the whole compiled epigenome as it's first argument.
+      expect(new Phenotype(function(){return this}).apply(values, null)).to.eql(values);
+      expect(new Phenotype(function(){return arguments[0]}).apply(null, values)).to.eql(values);
+      // Still prioritize arguments to this?
+      expect(new Phenotype(function(){return arguments[0]}).apply(values)).to.eql(values);
+    })
+    it("optionally applies function representations with an array", () => {
+      let values = [
+        [1, 3, 7],
+        [0],
+        [2, 3, 3],
+        []
+      ]
+      // Takes an array.
+      expect(new Phenotype(function(){return this.from(arguments)}).apply(Array, values)).to.eql(values);
+    })
   });
 });

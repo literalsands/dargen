@@ -38,14 +38,18 @@ import { GenomeBase } from "./GenomeBase";
  *
  */
 export class Epigenome extends GenomeBase {
-  constructor(epigenome, alphabet=[]) {
+  constructor(epigenome, alphabet = []) {
     if (Number.isSafeInteger(epigenome) && epigenome >= 0) {
       super();
-      this._alphabet = alphabet;
+      this.alphabet = alphabet;
       this.size = epigenome;
+    } else if (Array.isArray(epigenome)) {
+      super(epigenome);
+      this.alphabet = alphabet;
+    } else {
+      super();
+      this.alphabet = alphabet;
     }
-    super(epigenome);
-    this._alphabet = alphabet;
   }
 
   /**
@@ -78,7 +82,9 @@ export class Epigenome extends GenomeBase {
    * // Unless you set them.
    * epigenome.alphabet = epigenome.alphabet
    */
-  set alphabet(alphabet) {
+  set alphabet(alphabet = []) {
+    if (!Array.isArray(alphabet))
+      throw new TypeError("Alphabet is not an Array");
     this._alphabet = alphabet;
   }
 
@@ -102,7 +108,7 @@ export class Epigenome extends GenomeBase {
    * epigenome.getRandomGeneValue() //=> "A"
    */
   getRandomGeneValue() {
-    return this.alphabet[Math.floor(super.getRandomGeneValue()*this.alphabet.length)];
+    return this._alphabet[Math.floor(Math.random() * this._alphabet.length)];
   }
 
   /**
@@ -121,12 +127,40 @@ export class Epigenome extends GenomeBase {
    * epigenome.selection("C") //=> []
    */
   selection(options) {
-    return (typeof options === "string")
-      // Positions that equal options string.
-      ? this.keys().filter((position) => {
-        this[position] === options;
-      })
+    return typeof options === "string"
+      ? // Positions that equal options string.
+        Array.from(this.keys()).filter(position => this[position] === options)
       : super.selection(options);
+  }
+
+  /**
+   * Make a copy of the Epigenome.
+   *
+   * @param {boolean} [deep=false] Make a copy of the set alphabet.
+   * @return {Epigenome} Return the copied epigenome.
+   *
+   * @example
+   * let epigenome = new Epigenome(["R", "R", "R"], ["R", "G", "B"])
+   * epigenome.copy().alphabet // => ["R", "G", "B"]
+   * epigenome.slice().alphabet // => ["R"]
+   *
+   * @example
+   * let alphabet = ["R", "G", "B"];
+   * let epigenome = new Epigenome(["R", "R", "R"], alphabet);
+   * let deepCopy = epigenome.copy(true)
+   * let copy = epigenome.copy()
+   *
+   * // When we add an element to the alphabet.
+   * alphabet.push("A")
+   * epigenome.alphabet //=> ["R", "G", "B", "A"]
+   * copy.alphabet //=> ["R", "G", "B", "A"]
+   * // The deep copy's alphabet is not altered.
+   * deepCopy.alphabet //=> ["R", "G", "B"]
+   */
+  copy(deep = false) {
+    let copy = super.copy(...arguments);
+    copy.alphabet = deep ? this._alphabet.slice() : this._alphabet;
+    return copy;
   }
 
   /**
@@ -146,10 +180,10 @@ export class Epigenome extends GenomeBase {
    */
   compile(genome) {
     return this.reduce((args, marker, position) => {
-      if (args[marker]) {
-        args[marker] = [genome[position]];
-      } else {
+      if (Array.isArray(args[marker])) {
         args[marker].push(genome[position]);
+      } else {
+        args[marker] = [genome[position]];
       }
       return args;
     }, {});
@@ -157,6 +191,7 @@ export class Epigenome extends GenomeBase {
 }
 
 Epigenome.Mutations = Object.assign({}, GenomeBase.Mutations, {
-  incrementation() {},
+  increment() {},
+  decrement() {},
   substitution() {}
-})
+});

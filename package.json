@@ -5,11 +5,12 @@
   "author": "Austin New <literalsands@gmail.com>, Paul Prae <paul.prae@outlook.com>",
   "main": "dist/index.js",
   "scripts": {
+    "build": "npm run compile && npm run docs:generate",
     "compile": "babel -d dist/ src/",
     "prepublish": "npm run compile",
-    "test": "mocha --compilers js:babel-core/register",
-    "testDocs": "mocha --compilers js:babel-core/register --require jsdoctest src/index.js",
-    "generate-docs": "node_modules/.bin/jsdoc -c jsdoc.json"
+    "test": "mocha --reporter TAP --compilers js:babel-core/register",
+    "test:examples": "mocha --compilers js:babel-core/register --require jsdoctest src/index.js",
+    "docs:generate": "node_modules/.bin/jsdoc -c jsdoc.json"
   },
   "babel": {
     "presets": [

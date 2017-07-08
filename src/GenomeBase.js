@@ -57,7 +57,6 @@ export class GenomeBase extends Array {
    * }
    */
   getRandomGeneValue() {
-    console.error("Not implemented.");
     return null;
   }
 
@@ -84,7 +83,9 @@ export class GenomeBase extends Array {
 
   set size(length) {
     let start = this.length;
+    // Set the length to truncate.
     this.length = length;
+    // Fill in new array elements with gene values.
     if (start < length) {
       this.fillRandom(start, length - 1);
     }
@@ -196,6 +197,9 @@ export class GenomeBase extends Array {
    * genome.selection() //=> [0, 1]
    */
   selection(options = 1) {
+    if (options instanceof Function) {
+      return [];
+    }
     if (typeof options === "number") {
       return this.reduce((selection, gene, i) => {
         if (Math.random() <= options) {
@@ -281,9 +285,12 @@ export class GenomeBase extends Array {
    * ])
    */
   mutate(options, callback) {
+    let capturedSelection, capturedGenome;
     if (Array.isArray(options)) {
-      // Call this function a bunch of times with a collector callback if the callback exists.
-      options.forEach(mutationOptions => this.mutate(mutationOptions));
+      capturedGenome = genome.copy();
+      options.forEach(mutationOptions, index => this.mutate(mutationOption, ({options: {selection}}) => options[index].selection = selection));
+      if (callback instanceof Function) callback(options, capturedGenome, this.copy())
+      return this;
     }
 
     let {
@@ -297,13 +304,18 @@ export class GenomeBase extends Array {
       options || {};
     let genome = modify ? this : this.copy();
 
-    let capturedSelection = genome.selection(selection);
-    let capturedGenome = genome.copy();
-    genome.mutations[name](
-      genome,
-      capturedSelection,
-      Object.assign({ lower, upper }, params)
-    );
+    if (typeof name === "string") {
+      capturedSelection = genome.selection(selection);
+      capturedGenome = genome.copy();
+      let mutationFunction = genome.mutations[name];
+      if (mutationFunction instanceof Function) {
+        mutationFunction(
+          genome,
+          capturedSelection,
+          Object.assign({ lower, upper }, params)
+        );
+      }
+    }
 
     // Truncate the genome to the max size.
     if (Number.isFinite(upper) && genome.size > upper) {
@@ -313,6 +325,8 @@ export class GenomeBase extends Array {
     if (Number.isFinite(lower) && genome.size < lower) {
       genome.size = lower;
     }
+
+    if (callback instanceof Function) callback(Object.assign({}, options, {selection: capturedSelection}), capturedGenome, genome.copy());
     return genome;
   }
 
@@ -366,9 +380,8 @@ export class GenomeBase extends Array {
     captureSelection.forEach(selected => {
       let geneMate = mates[Math.floor(Math.random() * mates.length)];
       // If mate doesn't contain gene length, abort.
-      let cross = geneMate.length > selected
-        ? geneMate[selected]
-        : child[selected];
+      let cross =
+        geneMate.length > selected ? geneMate[selected] : child[selected];
       child.splice(selected, 1, cross);
     });
     return child;
@@ -452,7 +465,7 @@ export class GenomeBase extends Array {
           ? 0
           : // Sum number of same positions.
             this.reduce((n, v, i) => (this[i] === genome[i] ? n + 1 : n), 0) /
-              (this.length > genome.length ? this.length : genome.length);
+            (this.length > genome.length ? this.length : genome.length);
   }
 }
 

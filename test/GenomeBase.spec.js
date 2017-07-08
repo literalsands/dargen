@@ -3,6 +3,8 @@ import { should, expect } from "chai";
 import { GenomeBase } from "../src/GenomeBase";
 
 describe("GenomeBase", () => {
+  it("is extensible", () => {
+  })
   describe("constructor", () => {
     it("does not require arguments", () => {
       (() => {
@@ -132,6 +134,16 @@ describe("GenomeBase", () => {
       genome.should.deep.equal(genomeCopy);
       genome.should.not.deep.equal(mutatedGenome);
     });
+    it("warns but doesn't fail if a named function does not exist", () => {
+      expect(() => {
+        genome.mutate({name: "not-a-function"})
+      }).to.not.throw(Error);
+    })
+    it("can take an array of mutations")
+    describe("callback", () => {
+      it("is called with options, capturedGenome, and mutated genome")
+      it("is called with pipeline options, capturedGenome, and mutated genome")
+    })
     describe("substitution", () => {
       it("is provided", () => {
         genome.size = 2
