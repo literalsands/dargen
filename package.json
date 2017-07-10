@@ -8,7 +8,8 @@
     "build": "npm run compile && npm run docs:generate",
     "compile": "babel -d dist/ src/",
     "prepublish": "npm run compile",
-    "test": "mocha --reporter TAP --compilers js:babel-core/register",
+    "test": "mocha --compilers js:babel-core/register",
+    "test:tap": "mocha --reporter TAP --compilers js:babel-core/register",
     "test:examples": "mocha --compilers js:babel-core/register --require jsdoctest src/index.js",
     "docs:generate": "node_modules/.bin/jsdoc -c jsdoc.json"
   },
