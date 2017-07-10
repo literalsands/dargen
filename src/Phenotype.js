@@ -79,7 +79,7 @@ export class Phenotype {
    * Apply an Object of name keys and argument values to the representation.
    *
    * @param {object} [thisArg] - `this` parameter for function.
-   * @param {object} funcArgs - Object of argument values.
+   * @param {object|array} funcArgs - Object of argument values.
    * @returns {object} - Decoded phenotype, or traits.
    * @memberof Phenotype
    */
@@ -89,15 +89,18 @@ export class Phenotype {
       thisArg = undefined;
     }
     return this.representation instanceof Function
-      ? this.representation.apply(thisArg, (Array.isArray(funcArgs)? funcArgs: [funcArgs]))
+      ? this.representation.apply(
+          thisArg,
+          Array.isArray(funcArgs) ? funcArgs : [funcArgs]
+        )
       : unflatten(
           Object.assign(
             {},
             this.representation,
             Object.keys(funcArgs).reduce(
-              (repr, name) =>
+              (representation, name) =>
                 Object.assign(
-                  repr,
+                  representation,
                   this.representation[name] instanceof Function
                     ? {
                         [name]: this.representation[name].apply(
@@ -109,6 +112,40 @@ export class Phenotype {
                 ),
               {}
             )
+          )
+        );
+  }
+
+  /**
+   * Bind `this` and an Object of name keys and argument values to the representation.
+   *
+   * @param {object} thisArg - `this` parameter for function.
+   * @param {object|array} funcArgs - Object of argument values.
+   * @returns {object} - Bound phenotype.
+   * @memberof Phenotype
+   */
+  bind(thisArg, funcArgs) {
+    return this.representation instanceof Function
+      ? this.representation.bind(
+          thisArg,
+          ...(Array.isArray(funcArgs) ? funcArgs : [funcArgs])
+        )
+      : unflatten(
+          Object.keys(this.representation).reduce(
+            (representation, name) =>
+              Object.assign(
+                representation,
+                this.representation[name] instanceof Function
+                  ? {
+                      [name]: this.representation[name].bind(
+                        thisArg,
+                        // If given arguments map, and that arguments map contains an entry for this function.
+                        ...((funcArgs && funcArgs[name]) || [])
+                      )
+                    }
+                  : {}
+              ),
+            {}
           )
         );
   }
