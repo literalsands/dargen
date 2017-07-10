@@ -6,7 +6,7 @@ import uuid from "node-uuid";
 let { v4: getIdentifier } = uuid;
 
 const DefaultPhenotype = new Phenotype(function() {
-  return this;
+  return this.genome;
 })
 /**
  * Create a new Individual
@@ -43,7 +43,7 @@ export class Individual {
   constructor(options = {}) {
     let phenotype;
     ({
-      genome: this.genome = new Genome(1),
+      genome: this.genome,
       epigenome: this.epigenome,
       parents: this.parents,
       generation: this.generation,
@@ -52,13 +52,6 @@ export class Individual {
       identifier: this.identifier = `i-${getIdentifier()}`,
       phenotype
     } = options);
-
-    if (!(this.genome instanceof Genome)) {
-      this.genome = new Genome(this.genome);
-    }
-    if (!(this.epigenome instanceof Epigenome)) {
-      this.epigenome = new Epigenome(this.epigenome);
-    }
     this.phenotype = phenotype;
   }
 
@@ -86,6 +79,7 @@ export class Individual {
    * let individual = new Individual()
    * individual.phenotype = {name: "Green"}
    * individual.phenotype instanceof Phenotype //=> true
+   *
    * @example
    * // Setting the phenotype can change the genome and epigenome if they aren't already set.
    * let individual = new Individual()
@@ -98,6 +92,7 @@ export class Individual {
    * @example
    * let individual = new Individual({genome: [0, 1, 0.5]})
    * individual.traits //=> [0, 1, 0.5]
+   *
    */
   get phenotype() {
     return this._phenotype;
@@ -112,11 +107,14 @@ export class Individual {
       ? new Phenotype(phenotype)
       : DefaultPhenotype;
     // Set default genome and epigenome based off of phenotype.
-    this._default_genome = new Genome(this._phenotype.length);
+    this._default_genome = new Genome();
+    this._default_genome.size = this._phenotype.length;
     let epigenome = Object.entries(
       this._phenotype.lengths
-    ).reduce((epigenome, [name, length]) =>
-      epigenome.fill(name, epigenome.length, epigenome.length + length), []
+    ).reduce((epigenome, [name, length]) => {
+      epigenome.length += length
+      return epigenome.fill(name, epigenome.length-length);
+    }, []
     );
     this._default_epigenome = new Epigenome(epigenome, this._phenotype.names);
   }
@@ -194,7 +192,7 @@ export class Individual {
   get traits() {
     // this.phenotype.apply(undefined, this.epigenome.compile(this.genome))
     let traits = this.phenotype.apply(
-      this.genome,
+      this,
       this.epigenome.compile(this.genome)
     );
     return traits;
@@ -230,9 +228,8 @@ export class Individual {
    * individual.mutate()
    */
   mutate() {
-    this.genome.mutate(this.traits.mutate || {
-      name: "substitution",
-      selection: 0.05
+    this.epigenome.mutate(this.traits.mutate, (options) => {
+      this.genome.mutate(options)
     });
     return this;
   }
@@ -266,7 +263,7 @@ export class Individual {
   crossover(...mates) {
     var childGenome = this.genome.crossover(
       this.traits.crossover,
-      ...mates.map(i => i.genome)
+      mates.map(i => i.genome)
     );
     // How do we decide the new generation? This might need to be called again, higher up.
     return new Individual({

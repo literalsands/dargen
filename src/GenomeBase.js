@@ -285,11 +285,20 @@ export class GenomeBase extends Array {
    * ])
    */
   mutate(options, callback) {
-    let capturedSelection, capturedGenome;
+    let capturedSelection, capturedGenome, capturedOptions;
     if (Array.isArray(options)) {
-      capturedGenome = genome.copy();
-      options.forEach(mutationOptions, index => this.mutate(mutationOption, ({options: {selection}}) => options[index].selection = selection));
-      if (callback instanceof Function) callback(options, capturedGenome, this.copy())
+      capturedGenome = this.copy();
+      capturedOptions = [];
+      // Call a Mutation Pipeline
+      options.forEach((mutationOptions, index) => {
+        this.mutate(
+          mutationOptions,
+          capturedPipelineOptions =>
+            (capturedOptions[index] = capturedPipelineOptions)
+        );
+      });
+      if (callback instanceof Function)
+        callback(capturedOptions, capturedGenome, this.copy());
       return this;
     }
 
@@ -304,9 +313,9 @@ export class GenomeBase extends Array {
       options || {};
     let genome = modify ? this : this.copy();
 
+    capturedSelection = genome.selection(selection);
+    capturedGenome = genome.copy();
     if (typeof name === "string") {
-      capturedSelection = genome.selection(selection);
-      capturedGenome = genome.copy();
       let mutationFunction = genome.mutations[name];
       if (mutationFunction instanceof Function) {
         mutationFunction(
@@ -326,7 +335,12 @@ export class GenomeBase extends Array {
       genome.size = lower;
     }
 
-    if (callback instanceof Function) callback(Object.assign({}, options, {selection: capturedSelection}), capturedGenome, genome.copy());
+    if (callback instanceof Function)
+      callback(
+        Object.assign({}, options, { selection: capturedSelection }),
+        capturedGenome,
+        genome.copy()
+      );
     return genome;
   }
 
@@ -360,7 +374,7 @@ export class GenomeBase extends Array {
    *   smoothness = genome.howSimilar(child)
    * })
    */
-  crossover(options, mates, callback) {
+  crossover(options = {}, mates, callback) {
     // Random chance any particular gene is from either parent.
     // Splice, Pivot Splice
     // Genes retain position or not.

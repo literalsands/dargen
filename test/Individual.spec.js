@@ -35,7 +35,7 @@ describe("Individual", () => {
     it("should parse to an equivalent individual", () => {
       let stringifiedIndividual = JSON.stringify(individual);
       let parsedIndividual = JSON.parse(stringifiedIndividual);
-      new Individual(parsedIndividual).should.not.deep.equal(individual);
+      new Individual(parsedIndividual).should.deep.equal(individual);
     });
   });
   describe("genome", () => {
@@ -103,6 +103,7 @@ describe("Individual", () => {
       expect(individual.traits).to.be.an.instanceof(Genome);
     });
     it("should always return the same value for the same genome", () => {
+      // TODO This proof could use work.
       let otherIndividual = new Individual({
         genome: individual.genome.copy()
       });
@@ -189,10 +190,11 @@ describe("Individual", () => {
         mutate: {
           name: "substitution",
           selection: g => g,
-          lower: g => g * 1200,
-          upper: g => g * 80
+          lower: g => Math.floor(g * 1200),
+          upper: g => Math.floor(g * 80)
         }
       };
+      individual.mutate();
       expect(() => {
         individual.mutate();
       }).to.not.throw(Error);
