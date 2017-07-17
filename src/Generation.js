@@ -23,6 +23,7 @@ export class Generation {
       // Save this generation's population as a copy.
       selection: this.selection = this._selection,
       removal: this.removal = this._removal,
+      survival: this.survival = this._removal,
 
       // Fitness function must be defined by the user.
       fitness: this.fitness,
@@ -52,8 +53,8 @@ export class Generation {
   /**
    * @typedef Generation~comparison
    * @type {Function}
-   * @param {any|any[]} a
-   * @param {any|any[]} b
+   * @param {any} a
+   * @param {any} b
    * @returns {number} If greater than zero, value a will be sorted before b.
    */
 
@@ -62,7 +63,7 @@ export class Generation {
     // Tournament sorts a group.
     let elite = groups.map(this._selection, this);
     // Should the groups and ranks be saved somewhere?
-    let childGroups = groups.map((group, i) =>
+    let childGroups = groups.map(this.removal, this).map((group, i) =>
       group.map(individual => individual.crossover(...elite[i]))
     );
     let childIndividuals = childGroups.reduce(
@@ -147,7 +148,7 @@ export class Generation {
    */
   next() {
     this.population.individuals = this._generation().concat(
-      this.removal(this.population.individuals)
+      this.survival(this._tournament(this.population.individuals))
     );
     return this.population.individuals;
   }
