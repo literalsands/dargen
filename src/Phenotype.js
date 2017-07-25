@@ -75,6 +75,7 @@ export class Phenotype {
       {}
     );
   }
+
   /**
    * Apply an Object of name keys and argument values to the representation.
    *
@@ -124,9 +125,10 @@ export class Phenotype {
    * @returns {object} - Bound phenotype.
    * @memberof Phenotype
    */
-  bind(thisArg, funcArgs) {
+  bind(thisArg, funcArgs, call=false) {
+    let bindOrCall = call ? "call": "bind";
     return this.representation instanceof Function
-      ? this.representation.bind(
+      ? this.representation[bindOrCall](
           thisArg,
           ...(Array.isArray(funcArgs) ? funcArgs : [funcArgs])
         )
@@ -137,13 +139,15 @@ export class Phenotype {
                 representation,
                 this.representation[name] instanceof Function
                   ? {
-                      [name]: this.representation[name].bind(
+                      [name]: this.representation[name][bindOrCall](
                         thisArg,
                         // If given arguments map, and that arguments map contains an entry for this function.
                         ...((funcArgs && funcArgs[name]) || [])
                       )
                     }
-                  : {}
+                  : {
+                    [name]: this.representation[name]
+                  }
               ),
             {}
           )

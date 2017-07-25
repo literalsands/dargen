@@ -191,9 +191,10 @@ export class Individual {
    */
   get traits() {
     // this.phenotype.apply(undefined, this.epigenome.compile(this.genome))
-    let traits = this.phenotype.apply(
+    let traits = this.phenotype.bind(
       this,
-      this.epigenome.compile(this.genome)
+      this.epigenome.compile(this.genome),
+      true
     );
     return traits;
   }

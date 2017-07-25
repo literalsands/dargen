@@ -109,6 +109,16 @@ describe("Individual", () => {
       });
       expect(otherIndividual.traits).to.deep.equal(individual.traits);
     });
+    it("should bind traits to the individual", () => {
+      individual.phenotype = {
+        hasArgs: function(a) {return this;}
+      }
+      expect(individual.traits.hasArgs).to.eql(individual);
+      individual.phenotype = {
+        noArgs: function() {return this;}
+      }
+      expect(individual.traits.noArgs).to.eql(individual);
+    })
   });
   describe("identifier", () => {
     let individual;
