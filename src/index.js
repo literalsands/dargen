@@ -1,5 +1,15 @@
+import  { Individual } from './Individual';
+import  { Genome } from './Genome';
+import  { Epigenome } from './Epigenome';
+import  { Phenotype } from './Phenotype';
+import  { Generation } from './Generation';
+import  { Population } from './Population';
 
-export { Individual } from './Individual';
-export { Genome } from './Genome';
-export { Generation } from './Generation';
-export { Population } from './Population';
+export {
+  Generation,
+  Population,
+  Individual,
+  Genome,
+  Epigenome,
+  Phenotype,
+}

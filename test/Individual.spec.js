@@ -2,95 +2,12 @@ import "babel-polyfill";
 import { should, expect, config } from "chai";
 import { Individual } from "../src/Individual";
 import { Genome } from "../src/Genome";
+import { Epigenome } from "../src/Epigenome";
+import { Phenotype } from "../src/Phenotype";
 
 config.includeStack = true;
 should();
 
-describe("PhenotypeHelpers", () => {});
-describe("Epigenome", () => {
-  let epigenome;
-  beforeEach(() => {
-    epigenome = new Epigenome([
-      'color',
-      'color',
-      'color',
-      'font.size',
-      'font.lineHeight',
-      'font.family',
-      'font.family',
-      'font.family'
-    ]);
-  });
-  describe("constructor", () => {
-    it("requires arguments", () => {
-      (() => {
-        new Epigenome();
-      }).should.throw(Error);
-    });
-    it("takes an array argument", () => {
-      (() => {
-        new Epigenome({});
-      }).should.throw(Error);
-      (() => {
-        new Epigenome(4);
-      }).should.throw(Error);
-      (() => {
-        new Epigenome(function(){});
-      }).should.throw(Error);
-      (() => {
-        new Enigenome([]);
-      }).should.not.throw(Error);
-    });
-  });
-  describe("json", () => {
-    it("outputs a string", () => {
-      JSON.stringify(epigenome).should.be.a("string");
-    });
-    it("should output a JSON object", () => {
-      JSON.parse(JSON.stringify(epigenome)).should.be.an("object");
-    });
-    it("should parse to an equivalent epigenome", () => {
-      let stringifiedEpigenome = JSON.stringify(epigenome);
-      let parsedEpigenome = JSON.parse(stringifiedEpigenome);
-      new Epigenome(parsedEpigenome).should.deep.equal(epigenome);
-    });
-  });
-  describe("mutate", () => {
-    it("modifies the epigenome")
-    it("doesn't modify the epigenome when asked")
-    describe("substitution", () => {
-      it("doesn't modify the epigenome")
-    })
-    describe("duplication", () => {
-      it("modifies the epigenome")
-      it("increases the occurrence of duplicated genes")
-    })
-    describe("inverse", () => {
-      it("modifies the epigenome")
-      it("doesn't change the occurrence of inverted genes")
-    })
-    describe("deletion", () => {
-      it("modifies the epigenome")
-      it("decreases the occurrence of deleted genes")
-    })
-    describe("icrementation", () => {
-      it("doesn't modify the epigenome")
-    })
-    describe("gravity", () => {
-      it("doesn't modify the epigenome")
-    })
-    describe("fuzzy mutations", () => {
-      it("doesn't modify the epigenome")
-    })
-    describe("computed gradient mutations", () => {
-      it("doesn't modify the epigenome")
-    })
-  });
-  describe("crossover", () => {
-    it("produces a modified epigenome when parent epigenome's crossover position values differ.")
-    it("simply copies the epigenome when parents crossover positions are identical")
-  });
-});
 describe("Individual", () => {
   describe("constructor", () => {
     it("doesn't requires arguments", () => {
@@ -136,7 +53,7 @@ describe("Individual", () => {
       individual = new Individual();
     });
     it("should be an epigenome", () => {
-      individual.genome.should.be.an.instanceof(Epigenome);
+      expect(individual.epigenome).to.be.an.instanceof(Epigenome);
     });
     it("will store gene to function mapping in an epigenome");
   });
@@ -147,122 +64,34 @@ describe("Individual", () => {
         genome: new Genome(2)
       });
     });
-    it("should take a function", () => {
-      (() => {
-        individual.phenotype = g => g;
-      }).should.not.throw(Error);
-      expect(individual.traits).to.deep.equal(individual.genome);
-    });
-    describe("function", () => {
-      describe("arity", () => {
-      it("will be assigned value of one if it does not exist", () => {
-        let g = g => {};
-        expect(g.arity).to.be.undefined;
-        individual.phenotype = g;
-        expect(g.arity).to.equal(1);
-      });
-      it("will be assigned value of one if it is not a number greater than or equal to 0", () => {
-        //TODO Add more examples.
-        let g = g => {};
-        expect(g.arity).to.be.undefined;
-        g.arity = "green";
-        expect(g.arity).to.equal("green");
-        individual.phenotype = g;
-        expect(g.arity).to.equal(1);
-      });
-      });
-      it("will use function key arity to partition gene", () => {
-        individual.phenotype = [
-          g => Math.floor(g * 50),
-          g => Math.floor(g * 100)
-        ];
-        expect(individual.phenotype[0].arity).to.equal(1);
-        expect(individual.phenotype[1].arity).to.equal(1);
-      });
-      it("will use function key arity to set starting gene size");
-      it("will call the function with genes, epigenome, genome");
-    });
-    it("should take an array");
-    it("should take an array of functions", () => {
-      (() => {
-        individual.phenotype = [
-          g => Math.floor(g * 50),
-          g => Math.floor(g * 100)
-        ];
-      }).should.not.throw(Error);
-      expect(individual.traits).to.be.oneOf(individual.phenotype);
-    });
-    it("should take an array of arrays", () => {
-      (() => {
-        individual.phenotype = [
-          ["magenta", "cyan", "yellow"],
-          ["serif", "sans-serif"]
-        ];
-      }).should.not.throw(Error);
-      expect(individual.traits).to.be.oneOf(individual.phenotype);
-    });
-    it("should take an array of objects");
-    it("should take nested arrays of objects and functions");
-    it("should take an object");
-    it("should take an object of functions", () => {
-      (() => {
-        individual.phenotype = {
-          copy: g => g.copy(),
-          reverse: g => g.copy().reverse()
-        };
-      }).should.not.throw(Error);
-      expect(individual.traits).to.deep.equal({
-        copy: individual.genome,
-        reverse: individual.genome.copy().reverse()
-      });
-    });
-    it("should take an object of arrays", () => {
-      (() => {
-        individual.phenotype = {
-          color: ["magenta", "cyan", "yellow"],
-          fontStyle: ["serif", "sans-serif"]
-        };
-      }).should.not.throw(Error);
-      expect(individual.traits.color).to.be.oneOf(individual.phenotype.color);
-      expect(individual.traits.fontStyle).to.be.oneOf(
-        individual.phenotype.fontStyle
+    it("should always be a phenotype", () => {
+      // Setting different individuals from constructor.
+      expect(new Individual().phenotype).to.be.instanceof(Phenotype);
+      expect(new Individual({ phenotype: {} }).phenotype).to.be.instanceof(
+        Phenotype
       );
-    });
-    it("should take an object of arrays and functions", () => {
-      individual.genome.size = 4;
-      individual.phenotype = {
-        color: g => `rgb(${g.join()})`,
-        fontStyle: ["serif", "sans-serif"]
-      };
-      expect(individual.traits.color).to.be.a("string");
-      expect(individual.traits.fontStyle).to.be.oneOf(
-        individual.phenotype.fontStyle
-      );
-    });
-    it("should take nested objects with functions and arrays", () => {
-      (() => {
-        individual.phenotype = {
-          mutate: {
-            rate: g => 0.1,
-            min: g => 0.2,
-            max: g => 0.3,
-            substitution: [0.4, 0.8, 1],
-            deletion: 0.5,
-            duplication: 0.6,
-            inversion: 0.7
-          }
-        };
-      }).should.not.throw(Error);
-      expect(individual.traits.mutate).to.be.an("object");
-      expect(individual.traits.mutate.deletion).to.equal(0.5);
-      expect(individual.traits.mutate.min).to.equal(0.2);
-      expect(individual.traits.mutate.max).to.equal(0.3);
-      expect(individual.traits.mutate.rate).to.equal(0.1);
-      expect(individual.traits.mutate.inversion).to.equal(0.7);
-      expect(individual.traits.mutate.duplication).to.equal(0.6);
-      expect(individual.traits.mutate.substitution).to.be.oneOf(
-        individual.phenotype.mutate.substitution
-      );
+      expect(
+        new Individual({ phenotype: { simple: "phenotype" } }).phenotype
+      ).to.be.instanceof(Phenotype);
+      expect(
+        new Individual({ phenotype: new Phenotype() }).phenotype
+      ).to.be.instanceof(Phenotype);
+      expect(
+        new Individual({ phenotype: { fancy: () => "phenotype" } }).phenotype
+      ).to.be.instanceof(Phenotype);
+
+      // Setting different individuals.
+      individual = new Individual();
+      individual.phenotype = undefined;
+      expect(individual.phenotype).to.be.instanceof(Phenotype);
+      individual.phenotype = {};
+      expect(individual.phenotype).to.be.instanceof(Phenotype);
+      individual.phenotype = { simple: "phenotype" };
+      expect(individual.phenotype).to.be.instanceof(Phenotype);
+      individual.phenotype = new Phenotype();
+      expect(individual.phenotype).to.be.instanceof(Phenotype);
+      individual.phenotype = { fancy: () => "phenotype" };
+      expect(individual.phenotype).to.be.instanceof(Phenotype);
     });
   });
   describe("traits", () => {
@@ -274,35 +103,22 @@ describe("Individual", () => {
       expect(individual.traits).to.be.an.instanceof(Genome);
     });
     it("should always return the same value for the same genome", () => {
+      // TODO This proof could use work.
       let otherIndividual = new Individual({
         genome: individual.genome.copy()
       });
       expect(otherIndividual.traits).to.deep.equal(individual.traits);
     });
-    describe("array", () => {
-      it("should return a value when a gene is 0 or 1", () => {
-        individual.phenotype = [0, 1, 2, 3];
-        individual.genome[0] = 0;
-        expect(individual.traits).to.equal(0);
-        individual.genome[0] = 1;
-        expect(individual.traits).to.equal(3);
-      });
-    });
-  });
-  describe("evaluate", () => {
-    let individual;
-    beforeEach(() => {
-      individual = new Individual();
-    });
-    it("should take a function", () => {
-      (() => {
-        individual.evaluate(traits => {
-          traits.reduce((sum, value) => {
-            sum + value;
-          }, 0);
-        });
-      }).should.not.throw(Error);
-    });
+    it("should bind traits to the individual", () => {
+      individual.phenotype = {
+        hasArgs: function(a) {return this;}
+      }
+      expect(individual.traits.hasArgs).to.eql(individual);
+      individual.phenotype = {
+        noArgs: function() {return this;}
+      }
+      expect(individual.traits.noArgs).to.eql(individual);
+    })
   });
   describe("identifier", () => {
     let individual;
@@ -379,17 +195,19 @@ describe("Individual", () => {
         individual.mutate();
       }).should.not.throw(Error);
     });
-    it("should be overriden by phenotype", () => {
+    it("should be given options through phenotype mutate", () => {
       individual.phenotype = {
         mutate: {
-          rate: g => g[2],
-          min: g => g[1],
-          max: g => g[0]
+          name: "substitution",
+          selection: g => g,
+          lower: g => Math.floor(g * 1200),
+          upper: g => Math.floor(g * 80)
         }
       };
-      (() => {
+      individual.mutate();
+      expect(() => {
         individual.mutate();
-      }).should.not.throw(Error);
+      }).to.not.throw(Error);
     });
   });
   describe("crossover", () => {

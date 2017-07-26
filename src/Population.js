@@ -8,13 +8,10 @@ let { v4: getIdentifier } = uuid;
  *
  * Takes prototype individual and creates a population with the same phenotype and options.
  *
- * @exports Phenotype
- * @param {Population|Object} population - Population parameters.
- * @param {String} [population.identifier=`p-${getIdentifier()}`] - A unique string for the population. Automatically populated by UUID.
- * @param {Date|String|Number} [population.timestamp=new Date()] - A timestamp of when this individual was created.
- * @param {Phenotype|Object} [population.phenotype] - An object containing functions.
- * @param {Individual[]|Object[]} [population.individuals] - An array of Individuals in the population.
- * @class Population
+ * @exports Population
+ * @classdesc A collection of individuals.
+ * @class
+ * @param {Population|Population~json} population - Population parameters.
  */
 export class Population {
 
@@ -35,6 +32,14 @@ export class Population {
       }));
     }
   }
+  /**
+   * @typedef Population~json
+   * @type {Object}
+   * @property {String} [identifier=`p-${getIdentifier()}`] - A unique string for the population. Automatically populated by UUID.
+   * @property {Date|String|Number} [timestamp=new Date()] - A timestamp of when this individual was created.
+   * @property {Phenotype|Object} [phenotype] - An object containing functions.
+   * @property {Individual[]|Object[]} [individuals] - An array of Individuals in the population.
+   */
 
   /**
    * Deeply copy the population.

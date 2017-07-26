@@ -10,10 +10,11 @@ let { v4: getIdentifier } = uuid;
  * Holds a population or individuals at a certain iteration or of a certain number of parents.
  *
  * @exports Generation
- * @class Generation
+ * @classdesc A generational collection of inidividuals.
+ * @class
  * @param {Generation|Object} generation - Generation options.
  * @param {Generation~fitness} generation.fitness - Generational fitness function.
- * @param {Function} generation.comparison - Generational comparison function.
+ * @param {Generation~comparison} generation.comparison - Generational comparison function.
  * @param {...Population|Object} populations - Populations to incorporate in a generational selection and removal process.
  */
 export class Generation {
@@ -22,6 +23,7 @@ export class Generation {
       // Save this generation's population as a copy.
       selection: this.selection = this._selection,
       removal: this.removal = this._removal,
+      survival: this.survival = this._removal,
 
       // Fitness function must be defined by the user.
       fitness: this.fitness,
@@ -41,13 +43,27 @@ export class Generation {
       });
     }
   }
+  /**
+   * @typedef Generation~fitness
+   * @type {Function}
+   * @param {Individual} individual
+   * @param {Individual[]} group
+   * @returns {any|any[]} A value or array of values to be consumed by a comparison function.
+   */
+  /**
+   * @typedef Generation~comparison
+   * @type {Function}
+   * @param {any} a
+   * @param {any} b
+   * @returns {number} If greater than zero, value a will be sorted before b.
+   */
 
   _generation() {
     let groups = this._groups().map(this._tournament, this);
     // Tournament sorts a group.
     let elite = groups.map(this._selection, this);
     // Should the groups and ranks be saved somewhere?
-    let childGroups = groups.map((group, i) =>
+    let childGroups = groups.map(this.removal, this).map((group, i) =>
       group.map(individual => individual.crossover(...elite[i]))
     );
     let childIndividuals = childGroups.reduce(
@@ -132,7 +148,7 @@ export class Generation {
    */
   next() {
     this.population.individuals = this._generation().concat(
-      this.removal(this.population.individuals)
+      this.survival(this._tournament(this.population.individuals))
     );
     return this.population.individuals;
   }

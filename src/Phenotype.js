@@ -2,12 +2,12 @@ import flatten from "flat";
 let { unflatten } = flatten;
 
 /**
- * Simple, configurable decoder representation.
- * Contains useful methods and abstractions for interacting with Objects and Arrays filled with functions.
+ * Creates a new phenotype.
  *
  * @exports Phenotype
- * @class Phenotype
- * @param {Phenotype} - An arbitrary object containing functions.
+ * @classdesc Simple, configurable decoder representation.  Contains useful methods and abstractions for interacting with Objects and Arrays filled with functions.
+ * @class
+ * @param {Phenotype|object|function} - An arbitrary object containing functions or a function.
  * @returns {Phenotype} - Returns the new Phenotype.
  */
 export class Phenotype {
@@ -15,60 +15,142 @@ export class Phenotype {
     this.representation = phenotype;
   }
   /**
-   * Set the arbitrary object containing functions.
+   * Set the arbitrary object containing functions, or set the single function.
    *
+   * The representation is flattened.
+   *
+   * @type {object|function}
    * @memberof Phenotype
    */
   set representation(phenotype) {
-    this._representation = flatten(phenotype);
+    this._representation =
+      phenotype instanceof Function
+        ? phenotype
+        : phenotype instanceof Object ? flatten(phenotype) : {}; // TODO Not fail so silently?
   }
-  /**
-   * Representation as a flattened object.
-   *
-   * @memberof Phenotype
-   */
+
   get representation() {
-    return this._representation;
+    return this._representation || {};
   }
   /**
    * Get the flattened names of functions.
    *
    * @readonly
+   * @type {string[]}
    * @memberof Phenotype
    */
   get names() {
-    return this.representation.keys().filter((key) => this.representation[key] instanceof Function);
+    return Object.keys(this.representation).filter(
+      key => this.representation[key] instanceof Function
+    );
   }
   /**
    * Get the combined length of all functions.
    *
    * @readonly
+   * @type {integer}
    * @memberof Phenotype
    */
   get length() {
-    return this.lengths.values().reduce((sum, length) => (sum + length), 0);
+    return this.representation instanceof Function
+      ? this.representation.length
+      : Object.values(this.lengths).reduce((sum, length) => sum + length, 0);
   }
   /**
    * Get the length of every function.
    *
    * @readonly
+   * @type {integer[]}
    * @memberof Phenotype
    */
   get lengths() {
-    return this.names.reduce((lengths, name) => Object.assign(lengths, {[name]: this.representation[name].length}));
+    return this.names.reduce(
+      (lengths, name) =>
+        Object.assign(
+          lengths,
+          this.representation[name] instanceof Function
+            ? { [name]: this.representation[name].length }
+            : {}
+        ),
+      {}
+    );
   }
+
   /**
    * Apply an Object of name keys and argument values to the representation.
    *
-   * @param {Object} thisArg - `this` parameter for function.
-   * @param {Object} funcArgs - Object of argument values.
-   * @returns {Object} - Decoded phenotype, or traits.
+   * @param {object} [thisArg] - `this` parameter for function.
+   * @param {object|array} funcArgs - Object of argument values.
+   * @returns {object} - Decoded phenotype, or traits.
    * @memberof Phenotype
    */
   apply(thisArg, funcArgs) {
-    return unflatten(Object.assign({},
-      this.representation,
-      this.funcArgs.keys().reduce((repr, name) => Object.assign(repr, {[name]: this.representation[name].apply(thisArg, funcArgs[name])}), {})
-    ));
+    if (funcArgs === undefined) {
+      funcArgs = thisArg;
+      thisArg = undefined;
+    }
+    return this.representation instanceof Function
+      ? this.representation.apply(
+          thisArg,
+          Array.isArray(funcArgs) ? funcArgs : [funcArgs]
+        )
+      : unflatten(
+          Object.assign(
+            {},
+            this.representation,
+            Object.keys(funcArgs).reduce(
+              (representation, name) =>
+                Object.assign(
+                  representation,
+                  this.representation[name] instanceof Function
+                    ? {
+                        [name]: this.representation[name].apply(
+                          thisArg,
+                          funcArgs[name]
+                        )
+                      }
+                    : {}
+                ),
+              {}
+            )
+          )
+        );
+  }
+
+  /**
+   * Bind `this` and an Object of name keys and argument values to the representation.
+   *
+   * @param {object} thisArg - `this` parameter for function.
+   * @param {object|array} funcArgs - Object of argument values.
+   * @returns {object} - Bound phenotype.
+   * @memberof Phenotype
+   */
+  bind(thisArg, funcArgs, call=false) {
+    let bindOrCall = call ? "call": "bind";
+    return this.representation instanceof Function
+      ? this.representation[bindOrCall](
+          thisArg,
+          ...(Array.isArray(funcArgs) ? funcArgs : [funcArgs])
+        )
+      : unflatten(
+          Object.keys(this.representation).reduce(
+            (representation, name) =>
+              Object.assign(
+                representation,
+                this.representation[name] instanceof Function
+                  ? {
+                      [name]: this.representation[name][bindOrCall](
+                        thisArg,
+                        // If given arguments map, and that arguments map contains an entry for this function.
+                        ...((funcArgs && funcArgs[name]) || [])
+                      )
+                    }
+                  : {
+                    [name]: this.representation[name]
+                  }
+              ),
+            {}
+          )
+        );
   }
 }
