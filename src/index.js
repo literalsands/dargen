@@ -5,12 +5,9 @@ import  { Phenotype } from './Phenotype';
 import  { Generation } from './Generation';
 import  { Population } from './Population';
 
-export const Survival = {
+export {
   Generation,
-  Population
-}
-
-export const Representation = {
+  Population,
   Individual,
   Genome,
   Epigenome,
