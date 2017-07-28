@@ -1,6 +1,6 @@
 # Why Dargen?
 
-Dargen is a genetic algorithm focused on ease-of-use and magic.
+Dargen is a genetic algorithm focused on ease-of-use and magic✨.
 
   - Just create the decoder.
     - Supply arbitrarily shaped objects with functions.
