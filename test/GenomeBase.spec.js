@@ -141,8 +141,47 @@ describe("GenomeBase", () => {
     })
     it("can take an array of mutations")
     describe("callback", () => {
-      it("is called with options, capturedGenome, and mutated genome")
-      it("is called with pipeline options, capturedGenome, and mutated genome")
+      let mutation;
+      beforeEach(() => {
+        genome.size = 4;
+        mutation = {
+          name: "substitution",
+          selection: 1
+        }
+      })
+      it("is called with a copy of the options or options pipeline as an options pipeline as the first argument", () => {
+        let mutation = {
+          name: "substitution",
+          selection: [0]
+        }
+        genome.mutate(mutation, (options) => {
+          expect(options).to.be.an("array")
+          expect(options[0]).to.eql(mutation)
+        })
+        genome.mutate([mutation], (options) => {
+          expect(options).to.be.an("array")
+          expect(options[0]).to.eql(mutation)
+        })
+      })
+      it("is called with a copy of the unaltered genome as the second argument", () => {
+        let genomeCopy = genome.copy();
+        genome.mutate(mutation, (options, unaltered) => {
+          expect(genomeCopy).to.eql(unaltered)
+        })
+      })
+      it("is called with a copy of the altered genome as the third argument", () => {
+        let genomeCopy = genome.copy();
+        genome.mutate(mutation, (options, unaltered, mutated) => {
+          expect(genome).to.eql(mutated)
+          expect(mutated).to.not.eql(unaltered)
+        })
+      })
+      it("replaces selection options with selection array", () => {
+        genome.mutate(mutation, (options) => {
+          expect(options).to.be.an("array");
+          expect(options[0].selection).to.eql([0, 1, 2, 3]);
+        })
+      })
     })
     describe("substitution", () => {
       it("is provided", () => {
