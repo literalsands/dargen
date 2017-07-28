@@ -254,13 +254,17 @@ describe("Phenotype", () => {
       ).to.eql(values);
     });
   });
+
   describe("bind", () => {
     beforeEach(() => {
       phenotype = new Phenotype({
         bindableFunction: function() {
           return this;
         },
-        unbindableFunction: () => this
+        unbindableFunction: () => this,
+        bindableArgsFunction: function() {
+          return Array.from(arguments);
+        }
       });
     });
     it("can take a single argument, bind scope", () => {
@@ -268,33 +272,66 @@ describe("Phenotype", () => {
         phenotype.bind(null);
       }).to.not.throw(Error);
     });
-    it("takes two arguments, bind scope and an object", () => {
+    it("can take a second object argument", () => {
       expect(() => {
         phenotype.bind(null, {});
       }).to.not.throw(Error);
     });
-    it("returns an object", () => {
+    it("can take a third boolean argument", () => {
+      expect(() => {
+        phenotype.bind(null, {}, true);
+      }).to.not.throw(Error);
+    });
+    it("defaults the third argument to false", () => {
+      let argMap = { bindableArgsFunction: ["bound"] };
+      expect(phenotype.bind({}, argMap).bindableArgsFunction).to.be.a('function');
+      expect(phenotype.bind({}, argMap, false).bindableArgsFunction).to.be.a('function');
+      expect(phenotype.bind({}, argMap, true).bindableArgsFunction).to.be.an('array');
+    });
+    it("works with an object representation", () => {
       expect(phenotype.bind({})).to.be.an("object");
     });
-    it("returns a function representation", () => {
+    it("binds nested functions", () => {
+      let thisValue = { foo: "bar" };
+      let bound = phenotype.bind(thisValue);
+      expect(bound.bindableFunction()).to.not.equal(bound.unbindableFunction());
+      expect(bound.bindableFunction()).to.equal(thisValue);
+      expect(bound.unbindableFunction()).to.equal(this);
+    });
+    it("binds nested functions with context of object as first argument", () => {
+      expect(
+        phenotype
+          .bind(null, {
+            bindableArgsFunction: "bound"
+          })
+          .bindableArgsFunction()
+      ).to.eql(["bound"]);
+    });
+    it("binds nested functions with context of array as arguments", () => {
+      expect(
+        phenotype
+          .bind(null, {
+            bindableArgsFunction: [0, 2, 10]
+          })
+          .bindableArgsFunction()
+      ).to.eql([0, 2, 10]);
+    });
+    it("works with a function representation", () => {
       expect(new Phenotype(function() {}).bind({})).to.be.a("function");
     });
-    it("replaces functions with bound functions", () => {
-      let bindValue = {foo: "bar"};
-      let boundPhenotype = phenotype.bind(bindValue);
-      expect(boundPhenotype.bindableFunction()).to.not.equal(boundPhenotype.unbindableFunction());
-      expect(boundPhenotype.bindableFunction()).to.equal(bindValue);
-      expect(boundPhenotype.unbindableFunction()).to.equal(this);
-    });
-    it("binds function representation with entire context as first argument", () => {
-      // Takes a compiled epigenome.
+    it("binds function representation with entire object as first argument", () => {
+      // A compiled epigenome.
       let values = {
         f1: [1, 3, 7],
         f2: [0],
         "o1.f3": [2, 3, 3],
         "o1.f4": []
       };
-      // And just consumes the whole compiled epigenome as it's first argument.
+      expect(
+        new Phenotype(function() {
+          return this;
+        }).bind(values)()
+      ).to.eql(values);
       expect(
         new Phenotype(function() {
           return this;
@@ -305,20 +342,24 @@ describe("Phenotype", () => {
           return arguments[0];
         }).bind(null, values)()
       ).to.eql(values);
-      expect(
-        new Phenotype(function() {
-          return this;
-        }).bind(values)()
-      ).to.eql(values);
     });
-    it("binds function representations with given an array", () => {
+    it("binds function representations with array as arguments", () => {
+      // An array of values.
       let values = [[1, 3, 7], [0], [2, 3, 3], []];
-      // Takes an array.
       expect(
         new Phenotype(function() {
           return this.from(arguments);
         }).bind(Array, values)()
       ).to.eql(values);
     });
+    it("calls functions if third argument is true", () => {
+      expect(
+        phenotype.bind({foo: "bar"}, {bindableArgsFunction: ["foo", "bar"]}, true)
+      ).to.eql({
+        bindableArgsFunction: ["foo", "bar"],
+        bindableFunction: {foo: "bar"},
+        unbindableFunction: this
+      })
+    })
   });
 });

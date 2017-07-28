@@ -125,13 +125,16 @@ export class Phenotype {
    * @returns {object} - Bound phenotype.
    * @memberof Phenotype
    */
-  bind(thisArg, funcArgs, call=false) {
-    let bindOrCall = call ? "call": "bind";
+  bind(thisArg, funcArgs, call = false) {
+    let bindOrCall = call ? "call" : "bind";
+    function bindFunc(func, thisArg, funcArgs) {
+      return func[bindOrCall](
+        thisArg,
+        ...(Array.isArray(funcArgs) ? funcArgs : [funcArgs])
+      );
+    }
     return this.representation instanceof Function
-      ? this.representation[bindOrCall](
-          thisArg,
-          ...(Array.isArray(funcArgs) ? funcArgs : [funcArgs])
-        )
+      ? bindFunc(this.representation, thisArg, funcArgs)
       : unflatten(
           Object.keys(this.representation).reduce(
             (representation, name) =>
@@ -139,15 +142,16 @@ export class Phenotype {
                 representation,
                 this.representation[name] instanceof Function
                   ? {
-                      [name]: this.representation[name][bindOrCall](
+                      // If given arguments map, and that arguments map contains an entry for this function.
+                      [name]: bindFunc(
+                        this.representation[name],
                         thisArg,
-                        // If given arguments map, and that arguments map contains an entry for this function.
-                        ...((funcArgs && funcArgs[name]) || [])
+                        (funcArgs && funcArgs[name] || [])
                       )
                     }
                   : {
-                    [name]: this.representation[name]
-                  }
+                      [name]: this.representation[name]
+                    }
               ),
             {}
           )
