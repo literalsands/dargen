@@ -149,18 +149,29 @@ describe("GenomeBase", () => {
           selection: 1
         }
       })
-      it("is called with a copy of the options or options pipeline as an options pipeline as the first argument", () => {
+      it("is called with a copy of the options as the first argument", () => {
         let mutation = {
           name: "substitution",
           selection: [0]
         }
+        let mutationCopy = Object.assign({}, mutation);
         genome.mutate(mutation, (options) => {
-          expect(options).to.be.an("array")
-          expect(options[0]).to.eql(mutation)
+          expect(options).to.be.an("object")
+          expect(options).to.eql(mutation)
+          mutation.params = {substitute: 0.5}
+          expect(options).to.not.eql(mutation)
         })
+      })
+      it("is called with a copy of the options pipeline as the first argument", () => {
+        let mutation = {
+          name: "substitution",
+          selection: [0]
+        }
         genome.mutate([mutation], (options) => {
           expect(options).to.be.an("array")
           expect(options[0]).to.eql(mutation)
+          mutation.params = {substitute: 0.5}
+          expect(options[0]).to.not.eql(mutation)
         })
       })
       it("is called with a copy of the unaltered genome as the second argument", () => {
@@ -176,10 +187,19 @@ describe("GenomeBase", () => {
           expect(mutated).to.not.eql(unaltered)
         })
       })
-      it("replaces selection options with selection array", () => {
+      it("replaces selection options with selected array", () => {
         genome.mutate(mutation, (options) => {
+          expect(options).to.be.an("object");
+          expect(options.selection).to.eql([0, 1, 2, 3]);
+        })
+      })
+      it("replaces selection options in pipeline with selected array", () => {
+        genome.mutate([mutation, mutation], (options) => {
           expect(options).to.be.an("array");
+          expect(options[0]).to.be.an("object");
           expect(options[0].selection).to.eql([0, 1, 2, 3]);
+          expect(options[1]).to.be.an("object");
+          expect(options[1].selection).to.eql([0, 1, 2, 3]);
         })
       })
     })
