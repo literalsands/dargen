@@ -11,7 +11,7 @@ const PhenotypeHelpers = {
    * @returns {function}
    */
   choose: function(arr) {
-    if (!Array.isArray(arr)) throw TypeError("Argument is not an Array");
+    if (!Array.isArray(arr)) throw TypeError("choose takes argument array");
     return function(unit) {
       return unit === 1
         ? arr[arr.length - 1]
@@ -27,6 +27,10 @@ const PhenotypeHelpers = {
    * @param {function} - Function to set the length on.
    * @returns {function}
    */
-  dynamic: function(length, func) {}
+  arity: function(length, func) {
+    if (!(typeof length === "number" && func instanceof Function)) throw TypeError("arity takes arguments number and function")
+    Object.defineProperty(func, "length", {value: length});
+    return func;
+  }
 };
 export default PhenotypeHelpers;

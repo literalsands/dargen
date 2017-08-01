@@ -44,14 +44,50 @@ describe("PhenotypeHelpers", () => {
       });
     });
   });
-  describe("dynamic", () => {
-    it("is a function");
-    it("takes a function and an initial arity");
-    it("is a function");
+  describe("arity", () => {
+    let {arity} = PhenotypeHelpers;
+    it("is a function", () => {
+      expect(arity).to.be.a('function')
+    });
+    it("takes an integer and a function", () => {
+      expect(() => {
+        arity(3, function() {});
+      }).to.not.throw(Error);
+    });
+    it("throws an error if not given an integer and a function", () => {
+      expect(() => {
+        arity();
+      }).to.throw(Error);
+      expect(() => {
+        arity(3);
+      }).to.throw(Error);
+      expect(() => {
+        arity(function(){});
+      }).to.throw(Error);
+      expect(() => {
+        arity(null, function(){});
+      }).to.throw(Error);
+    })
     describe("return function", () => {
-      it("is a function");
-      it("has a length");
-      it("returns the same values as the given function");
+      it("is a function", () => {
+        expect(arity(2, function(){})).to.be.a('function')
+      });
+      it("has a length", () => {
+        expect(arity(2, function(){})).has.property('length')
+      });
+      it("has the set length", () => {
+        expect(arity(2, function(){})).has.property('length', 2)
+      })
+      it("has the set length despite arguments", () => {
+        expect(arity(2, function(a, b, c, d){})).has.property('length', 2)
+      })
+      it("returns the same values as the given function", () => {
+        let func = function(a, b) {return a + b;}
+        let aFunc = arity(4, func)
+        expect(func(1, 2)).to.equal(aFunc(1, 2));
+        expect(func(3, 2)).to.equal(aFunc(3, 2));
+        expect(func(1, 3)).to.equal(aFunc(1, 3));
+      });
     });
   });
 });
