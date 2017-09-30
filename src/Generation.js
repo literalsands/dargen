@@ -1,7 +1,7 @@
 import { Population } from "./Population";
 import { Individual } from "./Individual";
 import getRandomInt from "./helpers";
-import uuid from "node-uuid";
+import uuid from "uuid";
 let { v4: getIdentifier } = uuid;
 
 /**

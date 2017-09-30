@@ -2,7 +2,7 @@ import { Genome } from "./Genome";
 import { GenomeBase } from "./GenomeBase";
 import { Epigenome } from "./Epigenome";
 import { Phenotype } from "./Phenotype";
-import uuid from "node-uuid";
+import uuid from "uuid";
 let { v4: getIdentifier } = uuid;
 
 const DefaultPhenotype = new Phenotype(function() {

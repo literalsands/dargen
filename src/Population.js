@@ -1,6 +1,6 @@
 import { Generation } from './Generation';
 import { Individual } from './Individual';
-import uuid from 'node-uuid';
+import uuid from 'uuid';
 let { v4: getIdentifier } = uuid;
 
 /**
