@@ -32,6 +32,12 @@ describe("Population", () => {
   describe("identifier", () => {
     it("should be a unique string");
   });
+  describe("fossilize", () => {
+    it("is a function")
+    it("returns an array")
+    it("returns an array of individuals")
+    it("returns an array of deeply copied individuals")
+  })
   describe("evolve", () => {
     it("should apply selection and removal to create a new generation");
     it("should create a new generation");
