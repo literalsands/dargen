@@ -1,5 +1,5 @@
 {
-  "name": "Dargen",
+  "name": "dargen",
   "version": "0.0.1",
   "description": "Reflective, Experimental Genetic Algorithm",
   "author": "Austin New <literalsands@gmail.com>, Paul Prae <paul.prae@outlook.com>",
@@ -7,15 +7,15 @@
   "scripts": {
     "build": "npm run compile && npm run docs:generate",
     "compile": "babel -d dist/ src/",
-    "prepublish": "npm run compile",
+    "prepublishOnly": "npm run compile",
     "test": "mocha --compilers js:babel-core/register",
-    "test:tap": "mocha --reporter TAP --compilers js:babel-core/register",
+    "test:tap": "npm run test -- --reporter=TAP",
     "test:examples": "mocha --compilers js:babel-core/register --require jsdoctest src/index.js",
     "docs:generate": "node_modules/.bin/jsdoc -c jsdoc.json"
   },
   "babel": {
     "presets": [
-      "es2015"
+      "env"
     ]
   },
   "dependencies": {
@@ -25,11 +25,13 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-core": "^6.25.0",
+    "babel-eslint": "^8.0.1",
+    "babel-preset-env": "^1.6.0",
     "babel-plugin-transform-builtin-extend": "^1.1.2",
     "babel-polyfill": "^6.22.0",
-    "babel-preset-es2015": "^6.24.1",
     "chai": "^3.5.0",
     "docdash": "^0.4.0",
+    "eslint": "^4.9.0",
     "eslint-plugin-react": "^7.1.0",
     "jsdoc-test": "0.0.4",
     "jsdoctest": "git+https://git@github.com/yamadapc/jsdoctest.git",
