@@ -7,7 +7,7 @@ let { v4: getIdentifier } = uuid;
 
 const DefaultPhenotype = new Phenotype(function() {
   return this.genome;
-})
+});
 /**
  * Create a new Individual
  *
@@ -46,27 +46,28 @@ export class Individual {
       genome: this.genome,
       epigenome: this.epigenome,
       parents: this.parents,
-      generation: this.generation,
-      population: this.population,
       timestamp: this.timestamp = +new Date(),
       identifier: this.identifier = `i-${getIdentifier()}`,
       phenotype
     } = options);
+    this.__proto = {
+      genome: options.genome,
+      epigenome: options.epigenome,
+      phenotype: options.phenotype
+    };
     this.phenotype = phenotype;
   }
 
   /**
- * @typedef Individual~json
- * @type {Object}
- * @property {String} [identifier=`i-${getIdentifier()}`] - A unique string for the individual. Automatically populated by UUID or genome.
- * @property {Date|String|Number} [timestamp=new Date()] - A timestamp of when this individual was created.
- * @property {Phenotype|Object} [phenotype] - An object containing functions.
- * @property {Genome|Array} [genome=new Genome()] - An array containing genes.
- * @property {Epigenome|Array} [epigenome] - An array containing strings specifying phenotype functions and corresponding to gene positions.
- * @property {Array} [parents] - An array of parent individual identifiiers.
- * @property {String} [generation] - An optional string specifying the generation in which this individual was created.
- * @property {String} [population] - An optional string specifying the population in which this individual was created.
- */
+   * @typedef Individual~json
+   * @type {Object}
+   * @property {String} [identifier=`i-${getIdentifier()}`] - A unique string for the individual. Automatically populated by UUID or genome.
+   * @property {Date|String|Number} [timestamp=new Date()] - A timestamp of when this individual was created.
+   * @property {Phenotype|Object} [phenotype] - An object containing functions.
+   * @property {Genome|Array} [genome=new Genome()] - An array containing genes.
+   * @property {Epigenome|Array} [epigenome] - An array containing strings specifying phenotype functions and corresponding to gene positions.
+   * @property {Array} [parents] - An array of parent individual identifiiers.
+   */
 
   /**
    * Phenotype for the individual.
@@ -100,22 +101,18 @@ export class Individual {
 
   set phenotype(phenotype) {
     // Set phenotype to be a Phenotype object.
-    this._phenotype =
-      phenotype instanceof Phenotype
+    this._phenotype = phenotype instanceof Phenotype
       ? phenotype
-      : phenotype !== undefined
-      ? new Phenotype(phenotype)
-      : DefaultPhenotype;
+      : phenotype !== undefined ? new Phenotype(phenotype) : DefaultPhenotype;
     // Set default genome and epigenome based off of phenotype.
     this._default_genome = new Genome();
     this._default_genome.size = this._phenotype.length;
     let epigenome = Object.entries(
       this._phenotype.lengths
     ).reduce((epigenome, [name, length]) => {
-      epigenome.length += length
-      return epigenome.fill(name, epigenome.length-length);
-    }, []
-    );
+      epigenome.length += length;
+      return epigenome.fill(name, epigenome.length - length);
+    }, []);
     this._default_epigenome = new Epigenome(epigenome, this._phenotype.names);
   }
 
@@ -126,10 +123,9 @@ export class Individual {
   }
 
   set epigenome(epigenome) {
-    this._epigenome =
-      epigenome instanceof Epigenome
-        ? epigenome
-        : Array.isArray(epigenome) ? new Epigenome(epigenome) : undefined;
+    this._epigenome = epigenome instanceof Epigenome
+      ? epigenome
+      : Array.isArray(epigenome) ? new Epigenome(epigenome) : undefined;
   }
 
   get genome() {
@@ -139,10 +135,9 @@ export class Individual {
   }
 
   set genome(genome) {
-    this._genome =
-      genome instanceof Genome
-        ? genome
-        : Array.isArray(genome) ? new Genome(genome) : undefined;
+    this._genome = genome instanceof Genome
+      ? genome
+      : Array.isArray(genome) ? new Genome(genome) : undefined;
   }
 
   /* Setup Individual using configuration object */
@@ -229,8 +224,8 @@ export class Individual {
    * individual.mutate()
    */
   mutate() {
-    this.epigenome.mutate(this.traits.mutate, (options) => {
-      this.genome.mutate(options)
+    this.epigenome.mutate(this.traits.mutate, options => {
+      this.genome.mutate(options);
     });
     return this;
   }

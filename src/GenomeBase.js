@@ -7,27 +7,24 @@ import { intersection } from "lodash";
  * @extends {Array}
  *
  * @example
- * // Extend this class to create a new Genome type.
- * const MyGenome = function(){};
- * MyGenome.prototype = GenomeBase.prototype;
- * MyGenome.prototype.constructor = GenomeBase.prototype.constructor;
- * MyGenome.prototype.getRandomGeneValue = function() {
- *   return "Gene";
+ * // An example BinaryGenome.
+ * class BinaryGenome extends GenomeBase {
+ *   constructor() {
+ *     super()
+ *   }
+ *   getRandomGeneValue() {
+ *     return Math.random() > 0.5 ? 1: 0;
+ *   }
  * }
- * MyGenome.Mutations = Object.assign({}, GenomeBase.Mutations, {
+ *
+ * BinaryGenome.Mutations = {...GenomeBase.Mutations
  *   // Assign some unique mutations.
  * }
  *
- * // The new genome behaves.
- * let genome = new MyGenome(4) //=> ["Gene", "Gene", "Gene", "Gene"]
- *
- * genome.mutate({mutation: "duplication", params: {rate: 1}})
- * genome //=> ["Gene", "Gene", "Gene", "Gene", "Gene", "Gene", "Gene", "Gene"]
- * genome.size //=> 8
- *
- * genome.mutate({mutation: "deletion", params: {rate: 1}})
- * genome //=> []
- * genome.size //=> 0
+ * // BinaryGenome creates a random string of 0s and 1s.
+ * new BinaryGenome(4) // => [0, 0, 0, 1]
+ * new BinaryGenome(4) // => [0, 0, 0, 0]
+ * new BinaryGenome(4) // => [1, 1, 0, 1]
  *
  */
 export class GenomeBase extends Array {
@@ -220,7 +217,8 @@ export class GenomeBase extends Array {
         stop = undefined,
         selection = undefined
       } = options;
-      // TODO:REVISE This is a naive and probably quite slow implementation.
+      // TODO:REVISE This is a naive and quite slow implementation.
+      // There should also be a way to make this tail recursive.
       return intersection(
         this.selection(rate),
         Array.from(this.keys()).slice(start, stop),

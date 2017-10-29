@@ -1,6 +1,6 @@
 import { Population } from "./src/Population";
 
-let target = "It works!"
+let target = "It works!";
 let population = new Population({
   phenotype: {
     mutate: [
@@ -8,45 +8,72 @@ let population = new Population({
         name: "substitution",
         selection: {
           selection: "value",
-          rate: 0.1
+          rate: g => g * 0.1
         }
       }
     ],
     value: function(a, b, c, d, e, f, g, h, i) {
       // I should be able to access other traits here.
-      var codes = Array.from(
-        arguments
-      ).map(arg => {
+      var codes = Array.from(arguments).map(arg => {
         return 32 + Math.floor(arg * (126 - 32));
       });
       var string = String.fromCharCode(...codes);
       return string;
-    },
+    }
   },
   size: 5
 });
 
+
+Population.Fitness["fitness"] = individual => {
+  return Array.from(target).reduce(
+    (n, v, i) => (target[i] === individual.traits.value[i] ? n : n + 1),
+    0
+  );
+};
+
 for (let i = 0; i < 2000; i++) {
-  population.evolve({
-    removal: individuals => {
-      console.log(individuals[0].traits.value)
-      return individuals.slice(0, 4);
+  // Print out the best individual of the population each generation.
+  console.log(
+    population.selection({
+      size: 1,
+      sort: { value: "fitness", order: "ascending" }
+    })
+  );
+  population.evolve([
+    {
+      // Perform crossover in tournaments of size 5.
+      selection: {
+        // Select groups.
+        size: 5,
+        sort: "random"
+      },
+      crossover: [
+        {
+          // "Less fit" Mating Partners
+          size: 4,
+          sort: {
+            value: "fitness",
+            order: "descending"
+          }
+        },
+        {
+          // "Elite" Tournament Winner
+          name: "elite",
+          size: 1,
+          sort: {
+            value: "fitness",
+            order: "ascending"
+          }
+        }
+      ]
     },
-    survival: individuals => {
-      return individuals.slice(0, 1);
-    },
-    groups: 5,
-    // Ascending order.
-    comparison: ({value: a}, {value: b}) => {
-      return a - b;
-    },
-    // Add 1 to an error term for every mismatched letter.
-    fitness: individual => {
-      let value = individual.traits.value;
-      let ret = Array.from(target).reduce(
-          (n, v, i) => (target[i] === value[i] ? n : n + 1),
-          0)
-      return ret;
+    {
+      // Perform mutation on total population except the elite, and replace with their mutated values.
+      mutate: {
+        operation: "inverse",
+        selections: ["elite"]
+      }
     }
-  });
+  ]);
 }
