@@ -101,7 +101,10 @@ describe("Population", () => {
     });
   });
 
+  // TODO I really want a way to include this as an operation.
   describe("generate", () => {
+    it("should take a prototype individual and a number of copies")
+    it("should return a list of individuals")
   });
 
   describe("identifier", () => {

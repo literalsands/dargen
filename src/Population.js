@@ -68,6 +68,10 @@ export class Population {
    */
 
   /**
+   * A pipeline operation is a selection with an operation applied to it.
+   * An operation doesn't have to be applied in every pipeline operation, for example a named selection can be created by itself.
+   * Some shorthand operations are available.
+   *
    * @typedef Population~PipelineOperation
    * @type {object}
    * @property {Population~SelectionOptions} [selection=true] - Base selection to apply operation to. Selects all if true.
@@ -143,7 +147,6 @@ export class Population {
    *     }
    *   }
    * ]);
-   *
    */
   evolve(pipeline) {
     return this;
@@ -183,6 +186,8 @@ export class Population {
    */
 
   /**
+   * Select a list of individual indexes. This list can be nested in groups.
+   *
    * @method selection
    * @param {Population~SelectionOptions} [options=true] - Options to create a selection or nested selection. Returns a complete selection by default.
    * @param {Population~Selection} [individuals] - Optional structured subset of the population to select from.
@@ -195,6 +200,10 @@ export class Population {
   }
 
   /**
+   * Options allowing you to sort by fitness functions using self-defined comparators.
+   * Sorting order "random" shuffles the selection.
+   * Sorting threshold filters the selection, removing the threshold and any value placed after it.
+   *
    * @typedef Population~SelectionSortOptions
    * @type {object}
    * @property {string|Population~Fitness} [value] - A function name on Population.Fitness or a function.
@@ -214,23 +223,23 @@ export class Population {
    */
   sort() {}
 
-  // Find a specific type of individual.
-  // Get stats on the population, centering around whether we have converged or not.
   /**
+   * NOT IMPLEMENTED
    * Stub function that could return some interesting statistics on the current population of individuals.
+   * Ideas for the future include convergence, trait commonality, and generational fitness graphs.
    *
    * @returns Object
    * @memberof Population
    */
   stats() {
-    // Spread for genes.
-    // Spread for traits.
   }
 
   /**
+   * An operation is a function that takes a selection and performs an insert, update, or remove operation on the current population.
+   *
    * @method operation
-   * @param {function|Population~PipelineOperator} operator
-   * @param {Population~SelectionOptions} selection
+   * @param {function|Population~PipelineOperator} operator - A function or function key on Population.Operation.
+   * @param {Population~SelectionOptions} selection - A selection of individuals to perform the operation with.
    * @returns {this}
    */
   operation(operator, selection) {
