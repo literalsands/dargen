@@ -24,17 +24,11 @@ export class Population {
       identifier: this.identifier = `p-${getIdentifier()}`
     } = population);
 
+    // TODO:REVISE Make this an operator. This would make the constructor more predictable, and would encourage for the creation of prototype individuals after the initial population has been created.
     if (this.proto instanceof Individual) {
       this.individuals = Array.from(
         new Array(this.individuals),
         i => new Individual(this.proto.__proto)
-      );
-    }
-    while (this.individuals.length < this.size) {
-      this.individuals.push(
-        new Individual({
-          phenotype: this.phenotype
-        })
       );
     }
   }
@@ -57,11 +51,14 @@ export class Population {
   fossilize() {}
 
   /**
+   * A pipeline is an ordered list of pipeline objects.
+   *
    * @typedef Population~Pipeline
    * @type {Population~PipelineOperation[]]}
    */
 
   /**
+   * Pipeline operators are named functions on the Population.Operation object.
    *
    * @typedef Population~PipelineOperator
    * @type {string} operation - A named operation that the Population class can perform. Add more operations by extending Population.Operation.
