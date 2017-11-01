@@ -18,19 +18,24 @@ let { v4: getIdentifier } = uuid;
 export class Population {
   constructor(population) {
     /* Setup Population using configuration object. */
+    let individuals;
     ({
       proto: this.proto,
-      individuals: this.individuals = [],
+      individuals,
       identifier: this.identifier = `p-${getIdentifier()}`
     } = population);
+    this.individuals =
+      typeof this.individuals === "array"
+        ? individuals
+        : this._generate(this.proto, individuals);
+  }
 
-    // TODO:REVISE Make this an operator. This would make the constructor more predictable, and would encourage for the creation of prototype individuals after the initial population has been created.
-    if (this.proto instanceof Individual) {
-      this.individuals = Array.from(
-        new Array(this.individuals),
-        i => new Individual(this.proto.__proto)
-      );
-    }
+  /**
+   * Generate orphan individuals from a prototype individual.
+   */
+  _generate(proto, n) {
+    // TODO: Make this an operator. This would make the constructor more predictable, and would encourage for the creation of prototype individuals after the initial population has been created.
+    return Array.from(new Array(n), i => new Individual(proto.__proto));
   }
 
   /**
@@ -43,12 +48,19 @@ export class Population {
    */
 
   /**
-   * Deeply copy the population.
+   * Deeply copied, immutable population.
    *
    * @returns Population - Frozen, deep copy of current population.
    * @memberof Population
    */
-  fossilize() {}
+  fossilize() {
+    return new Population({
+      individuals: Array.from(
+        individuals,
+        individual => new Individual(JSON.parse(JSON.stringify(individual)))
+      )
+    });
+  }
 
   /**
    * A pipeline is an ordered list of pipeline objects.
@@ -72,13 +84,12 @@ export class Population {
    * @typedef Population~PipelineOperation
    * @type {object}
    * @property {Population~SelectionOptions} [selection=true] - Base selection to apply operation to. Selects all if true.
-   * @property {Population~PipelineOperator} [operation="replace"]
+   * @property {Population~PipelineOperator} operation
    * @property {Population~SelectionOptions} [mutate] - Applies mutate operation to selection. Given selection is taken from base selection. Mutate always occurs after crossover if together. Shorthand for the mutateAndReplace operation.
-   * TODO I think this should have an image of explanation.
    * @property {Population~SelectionOptions[]} [crossover] - Applies crossover operation to selections, with the first selection being the "bearing" parent. Selections are taken from base selection. The shape and number of crossover children will be the same as that of the first selection. Shorthand for the crossoverAndReplace operation.
-   * @property {Population~SelectionOptions} [replace] - Shorthand for the replace operation.
-   * @property {Population~SelectionOptions} [insert] - Shorthand for the insert operation. Will be ignored when "replace" is present. Insert is always applied after remove.
-   * @property {Population~SelectionOptions} [remove] - Shorthand for the remove operation. Will be ignored when "replace" is present. Remove is always applied before insert.
+   * @property {Population~SelectionOptions} [duplicate] - Shorthand for the duplicate operation.
+   * @property {Population~SelectionOptions} [remove] - Shorthand for the remove operation.
+   * TODO: Amend documentation with an image showing the total structure of a pipeline operation.
    */
 
   /**
@@ -189,10 +200,79 @@ export class Population {
    * @param {Population~SelectionOptions} [options=true] - Options to create a selection or nested selection. Returns a complete selection by default.
    * @param {Population~Selection} [individuals] - Optional structured subset of the population to select from.
    * @returns {Population~Selection}
+   *
+   * @example
+   * // True returns the entire selection.
+   * population.selection(true) // => [0, 1, 2, 3, 4]
+   * // Falsey values return an empty selection.
+   * population.selection({}) // => []
+   *
+   * @example
+   * // A named selection is stored for later.
+   * population.selection({name: "saveit"}, true) // => [0, 1, 2, 3, 4]
+   * population.selection("saveit")               // => [0, 1, 2, 3, 4]
+   * population.selection({name: "saveit"})       // => [0, 1, 2, 3, 4]
+   * population.selection({name: "saveit", shuffle: true, groups: 2}) // => [[3, 1, 4], [0, 2]]
+   * population.selection("saveit")               // => [[3, 1, 4], [0, 2]]
+   * population.selection({name: "saveit"})       // => [[3, 1, 4], [0, 2]]
+   *
+   * //
    */
-  selection(options) {
-    if (options instanceof Object) {
-      // Either selection operator or options object.
+  selection(...selections) {
+    // Create selection from options.
+    if (selections.length === 1) {
+      let [options] = selections;
+      if (options === true) {
+        return Array.from(new Array(this.individuals), (v, i) => i);
+      } else if (!options) {
+        return [];
+      } else if (typeof options === "string") {
+        return this._selections[options];
+      } else if (options instanceof Object) {
+        let selection;
+        // Either selection operator or options object.
+        if (options.name) {
+          this._selections[options.name] = Array.isArray(
+            this._selections[options.name]
+          )
+            ? this._selections[options.name]
+            : [];
+          selection = this._selections[options.name];
+        }
+        if (options.operation) {
+        } else {
+          // Shuffle
+          if (options.operation) this._shuffle(selection);
+          // Groups
+          // Size
+          if (options.size && !options.groups) selection.splice(options.size)
+          if (options.groups) {
+            if (Number.isSafeInteger(options.groups)) {
+
+            }
+            if (options.size) selection.forEach(group => group.splice(options.size))
+          }
+          // Sort
+          // SortThreshold
+        }
+        return selection;
+      }
+      // Combine selections.
+    } else {
+    }
+  }
+
+  // In place fisher-yates shuffle.
+  _shuffle(selection) {
+    let choice = Math.random() * selection.length;
+    for (
+      let i = 0, choice = Math.floor(Math.random() * (selection.length - i));
+      i < selection.length;
+      i++
+    ) {
+      let swap = selection[choice + i];
+      selection[choice + i] = selection[i];
+      selection[i] = swap;
     }
   }
 
@@ -228,11 +308,10 @@ export class Population {
    * @returns Object
    * @memberof Population
    */
-  stats() {
-  }
+  stats() {}
 
   /**
-   * An operation is a function that takes a selection and performs an insert, update, or remove operation on the current population.
+   * An operation is a function that takes a selection and performs an operation on the current population.
    *
    * @method operation
    * @param {function|Population~PipelineOperator} operator - A function or function key on Population.Operation.
@@ -275,21 +354,12 @@ export class Population {
   }
 
   /**
-   * @method insert - A shorthand function for the operation "insert."
+   * @method duplicate - A shorthand function for the operation "duplicate."
    * @param {Population~SelectionOptions} selection
    * @returns {this}
    */
-  insert(selection) {
-    this.operation("insert", selection);
-  }
-
-  /**
-   * @method replace - A shorthand function for the operation "replace."
-   * @param {Population~SelectionOptions} selection
-   * @returns {this}
-   */
-  replace(selection) {
-    this.operation("replace", selection);
+  duplicate(selection) {
+    this.operation("duplicate", selection);
   }
 }
 

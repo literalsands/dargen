@@ -1,3 +1,4 @@
+import {expect} from "chai";
 import { Population } from "../src/Population";
 import { Individual } from "../src/Individual";
 describe("Population", () => {
@@ -111,7 +112,7 @@ describe("Population", () => {
     });
     it("can be assigned through the contructor", () => {
       let population = new Population({ ...population, identifier: "POPTEST" });
-      expect(population.identifier).to.equal("POPTEST");
+      expect(population.identifier).to.eql("POPTEST");
     });
     it("can be omitted from the constructor", () => {
       expect(() => {
@@ -137,11 +138,11 @@ describe("Population", () => {
       });
       it("includes an array of deeply copied individuals", () => {
         let fossilized = population.fossilize();
-        expect(fossilized.individuals).to.equal(population.individuals);
-        expect(fossilized.individuals).to.not.eql(population.individuals);
+        expect(fossilized.individuals).to.eql(population.individuals);
+        expect(fossilized.individuals).to.not.equal(population.individuals);
         fossilized.individuals.forEach((fossil, i) => {
-          expect(fossil).to.equal(population.individuals[i]);
-          expect(fossil).to.not.eql(population.individuals[i]);
+          expect(fossil).to.eql(population.individuals[i]);
+          expect(fossil).to.not.equal(population.individuals[i]);
         });
       });
       it("includes an array of immutable deeply copied individuals", () => {
@@ -168,7 +169,7 @@ describe("Population", () => {
     it("returns the mutated population", () => {
       let evolved = population.evolve(nullStrategy);
       expect(evolved).to.be.instanceof(Population);
-      expect(evolved).to.be.eql(population);
+      expect(evolved).to.be.equal(population);
     });
     it("requires a first argument", () => {
       expect(() => {
@@ -224,20 +225,26 @@ describe("Population", () => {
     });
 
     describe("options", () => {
-      // TODO:REVISE Think about making named selections permament and released on evolve.
+      // TODO:REVISE Think about making named selections permament, but released on evolve.
       describe("name", () => {
         let namedSelection = {
           name: "pick5",
           size: 5
         };
+        it("is the default string argument", () => {
+          expect(() => {
+            population.selection("pick5");
+          }).to.not.throw(Error);
+          expect(population.selection("pick5")).to.eql([]);
+        });
         it("saves selection under a name", () => {
-          expect(population.selection(namedSelection)).to.equal(
+          expect(population.selection(namedSelection)).to.eql(
             population.selection("pick5")
           );
         });
         it("overwrites names if given more than once", () => {
           let selected = population.selection(namedSelection);
-          expect(selected).to.equal(population.selection("pick5"));
+          expect(selected).to.eql(population.selection("pick5"));
           population.selection({
             name: "pick5",
             size: 5,
@@ -245,10 +252,10 @@ describe("Population", () => {
               order: "random"
             }
           });
-          expect(selected).to.not.equal(population.selection("pick5"));
+          expect(selected).to.not.eql(population.selection("pick5"));
         });
-        it("doesn't return anything when not set", () => {
-          expect(population.selection("pick5")).to.equal([]);
+        it("returns empty selection when not set", () => {
+          expect(population.selection("pick5")).to.eql([]);
         });
       });
 
@@ -281,38 +288,101 @@ describe("Population", () => {
             groups: true,
             size: 2
           });
-          let nestedSelection = population.selection({
-            groups: true,
-            size: 1
-          }, selection);
+          let nestedSelection = population.selection(
+            {
+              groups: true,
+              size: 1
+            },
+            selection
+          );
           selection.forEach(selectionGroup => {
             expect(selectionGroup.length).to.be.oneOf([1, 2]);
             selectionGroup.forEach(nestedSelecionGroup => {
               expect(nestedSelectionGroup.length).to.be.oneOf(1);
-            })
+            });
           });
         });
       });
 
       describe("size", () => {
-        it("takes a number");
-        it("assumes a size value if given groups number");
-        it("limits selection to a number of individuals");
-        it("limits selection to a number of individuals per group");
+        it("takes a number", () => {
+          expect(() => {
+            population.selection({ size: 10 });
+          }).to.not.throw(Error);
+        });
+        it("assumes a size value if given groups number", () => {
+          let populationTotalSize = 10;
+          let population = new Population({
+            proto,
+            individuals: populationTotalSize
+          });
+          let groups = 5;
+          let selection = population.selection({
+            groups: groups,
+            size: populationTotalSize / groups
+          });
+          expect(selection).to.eql(population.selection({ groups: 5 }));
+        });
+        it("limits selection to a number of individuals", () => {
+          let population = new Population({ proto, individuals: 10 });
+          let selection = population.selection({ size: 5 });
+          expect(selection.length).to.be.below(5);
+        });
+        it("limits selection to a number of individuals per group", () => {
+          let population = new Population({ proto, individuals: 20 });
+          let selection = population.selection({ groups: 5, size: 1 });
+          selection.forEach(group => {
+            expect(group.length).to.eql(1);
+          });
+        });
       });
-
       describe("sort", () => {
-        it("takes a sort object");
+        it("takes a sort object", () => {
+          expect(() => {
+            population.selection({
+              sort: { order: "ascending", fitness: "value" }
+            });
+          }).to.not.throw(Error)
+        });
         describe("gracefully combines with group options", () => {
-          it("sorts fitness after grouping")
+          it("sorts fitness after grouping", () => {
+            let selection = population.selection({
+              groups: 2,
+              sort: { order: "ascending", fitness: "value" }
+            })
+            let groupsBefore = population.selection({
+              sort: { order: "ascending", fitness: "value" }
+            }, {groups: 2})
+            let groupsAfter = population.selection({groups: 2}, {
+              sort: { order: "ascending", fitness: "value" }
+            })
+            expect(selection).to.eql(groupsBefore);
+            expect(selection).to.not.eql(groupsAfter);
+          });
         });
       });
+      // Order of application? Shuffle, Groups, Size, Sort, SortThreshold
       describe("shuffle", () => {
-        it("takes a boolean");
-        describe("gracefully combines with group options", () => {
-          it("sorts shuffled before grouping")
+        it("takes a boolean", () => {
+          expect(() => {
+            population.selection({
+              shuffle: true
+            })
+          })
         });
-      })
+        describe("gracefully combines with group options", () => {
+          it("shuffles before grouping", () => {
+            let selection = population.selection({
+              groups: 2,
+              shuffle: true
+            })
+            let groupsBefore = population.selection({shuffled: true}, {groups: 2})
+            let groupsAfter = population.selection({groups: 2}, {shuffled: true})
+            expect(selection).to.eql(groupsAfter);
+            expect(selection).to.not.eql(groupsBefore);
+          });
+        });
+      });
     });
   });
 
