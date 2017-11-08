@@ -24,10 +24,16 @@ export class Population {
       individuals,
       identifier: this.identifier = `p-${getIdentifier()}`
     } = population);
-    this.individuals =
-      typeof this.individuals === "array"
-        ? individuals
-        : this._generate(this.proto, individuals);
+    // A population requires a set of individuals or it requires a prototype individuals and a number of individuals.
+    if (
+      !(Array.isArray(individuals) && individuals.length > 0) &&
+      !(this.proto instanceof Object && Number.isInteger(individuals))
+    )
+      throw Error("Invalid population options.");
+    this.individuals = Array.isArray(individuals)
+      ? individuals
+      : this._generate(this.proto, individuals);
+    this._selections = [];
   }
 
   /**
@@ -35,7 +41,10 @@ export class Population {
    */
   _generate(proto, n) {
     // TODO: Make this an operator. This would make the constructor more predictable, and would encourage for the creation of prototype individuals after the initial population has been created.
-    return Array.from(new Array(n), i => new Individual(proto.__proto));
+    return Array.from(
+      new Array(n),
+      i => new Individual(proto && proto.__proto)
+    );
   }
 
   /**
@@ -56,7 +65,7 @@ export class Population {
   fossilize() {
     return new Population({
       individuals: Array.from(
-        individuals,
+        this.individuals,
         individual => new Individual(JSON.parse(JSON.stringify(individual)))
       )
     });
@@ -216,60 +225,97 @@ export class Population {
    * population.selection("saveit")               // => [[3, 1, 4], [0, 2]]
    * population.selection({name: "saveit"})       // => [[3, 1, 4], [0, 2]]
    *
-   * //
    */
   selection(...selections) {
-    // Create selection from options.
-    if (selections.length === 1) {
-      let [options] = selections;
-      if (options === true) {
-        return Array.from(new Array(this.individuals), (v, i) => i);
-      } else if (!options) {
-        return [];
-      } else if (typeof options === "string") {
-        return this._selections[options];
-      } else if (options instanceof Object) {
-        let selection;
-        // Either selection operator or options object.
-        if (options.name) {
-          this._selections[options.name] = Array.isArray(
-            this._selections[options.name]
-          )
-            ? this._selections[options.name]
-            : [];
-          selection = this._selections[options.name];
-        }
-        if (options.operation) {
-        } else {
-          // Shuffle
-          if (options.operation) this._shuffle(selection);
-          // Groups
-          // Size
-          if (options.size && !options.groups) selection.splice(options.size)
-          if (options.groups) {
-            if (Number.isSafeInteger(options.groups)) {
-
-            }
-            if (options.size) selection.forEach(group => group.splice(options.size))
-          }
-          // Sort
-          // SortThreshold
-        }
+    // Combine selections.
+    console.log(selections);
+    return selections.reverse().reduce((selection, next) => {
+      // If the selection is nested, apply next on every nested selection.
+      if (Array.isArray(selection) && Array.isArray(selection[0])) {
+        selection.forEach((nested, i) => selection[i] = this.selection(next, nested));
         return selection;
       }
-      // Combine selections.
-    } else {
+      return this._selection(next, selection);
+    }, undefined);
+  }
+
+  _selection(options, selection = Array.from(this.individuals, (v, i) => i)) {
+    // Return a full selection if given true.
+    if (options === true) {
+      // All indices for individuals.
+      return selection;
+      // Return the the number if given a number, as long as it is in range.
+    } else if (Number.isInteger(options)) {
+      // Out of bounds selection elements are replaced with -1's.
+      return options < this.individuals.length && options > -1 ? options : -1;
+      // Return an empty selection if given a falsey value.
+    } else if (!options) {
+      // Return an empty selection.
+      return [];
+      // Return the named selection if given a string.
+    } else if (typeof options === "string") {
+      return this._selections[options] || [];
+      // Return a selection recursively if given an array.
+    } else if (Array.isArray(options)) {
+      // Replace array element with selection.
+      options.forEach(
+        (el, i) => (options[i] = this._selection(el, selection))
+      );
+      return options;
+      // Return a configured selection if given an object.
+    } else if (options instanceof Object) {
+      // Overwrite the selection name if given a name and options configure the selection in some way.
+      if (typeof options.name === "string" && Object.keys(options).length > 1)
+        this._selections[options.name] = selection;
+      // Initialize the selection with the named selection or a new full selection.
+      selection =
+        typeof options.name === "string"
+          ? this._selection(options.name)
+          : selection;
+      // Perform an operation over selections.
+      if (options.operation) {
+        // Configure a full selection.
+      } else {
+        // Shuffle the selection.
+        if (options.shuffle) this._shuffle(selection);
+        // Apply sizing and grouping options.
+        if (options.size && !options.groups) selection.splice(options.size);
+        if (options.groups) {
+          let i = 0,
+            groups = Math.min(
+              Number.isSafeInteger(options.groups)
+                ? options.groups
+                : selection.length / options.size,
+              selection.length
+            ),
+            size = Math.max(
+              Number.isSafeInteger(options.size)
+                ? options.size
+                : selection.length / groups,
+              1
+            );
+          selection[0] = selection.splice(0);
+          while (i < groups) {
+            // TODO: This use of size leaves a variable end group instead of groups of +1/-1 size.
+            selection[i + 1] = selection[i].splice(Math.floor(size));
+            i++;
+          }
+          selection.splice(i);
+        }
+        // Sort the selection.
+        if (options.sort instanceof Object) {
+          this.sort(selection, options.sort);
+        }
+        // Clip the selection to a threshold.
+      }
+      return selection;
     }
   }
 
   // In place fisher-yates shuffle.
   _shuffle(selection) {
-    let choice = Math.random() * selection.length;
-    for (
-      let i = 0, choice = Math.floor(Math.random() * (selection.length - i));
-      i < selection.length;
-      i++
-    ) {
+    for (let i = 0; i < selection.length; i++) {
+      let choice = Math.floor(Math.random() * (selection.length - i));
       let swap = selection[choice + i];
       selection[choice + i] = selection[i];
       selection[i] = swap;
@@ -293,12 +339,14 @@ export class Population {
    * Return a population selection in an order based on fitness functions.
    *
    * @method sort
-   * @param {array|Population} individuals
-   * @param {Population~Selection} [selection] - A selection to sort.
+   * @param {Population~Selection} selection - A selection to sort.
    * @param {string|Population~SelectionSortOptions} options - An options object.
    * @returns {Population~Selection} - Sorts the given selection or returns a new selection of the sorted individuals.
    */
-  sort() {}
+  sort(selection, options) {
+    if (Array.isArray(selection)) {
+    }
+  }
 
   /**
    * NOT IMPLEMENTED
