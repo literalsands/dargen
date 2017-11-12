@@ -31,7 +31,7 @@ export class Population {
     )
       throw Error("Invalid population options.");
     this.individuals = Array.isArray(individuals)
-      ? individuals
+      ? individuals.slice()
       : this._generate(this.proto, individuals);
     this._selections = [];
   }
@@ -228,11 +228,12 @@ export class Population {
    */
   selection(...selections) {
     // Combine selections.
-    console.log(selections);
     return selections.reverse().reduce((selection, next) => {
       // If the selection is nested, apply next on every nested selection.
       if (Array.isArray(selection) && Array.isArray(selection[0])) {
-        selection.forEach((nested, i) => selection[i] = this.selection(next, nested));
+        selection.forEach(
+          (nested, i) => (selection[i] = this.selection(next, nested))
+        );
         return selection;
       }
       return this._selection(next, selection);
@@ -258,9 +259,7 @@ export class Population {
       // Return a selection recursively if given an array.
     } else if (Array.isArray(options)) {
       // Replace array element with selection.
-      options.forEach(
-        (el, i) => (options[i] = this._selection(el, selection))
-      );
+      options.forEach((el, i) => (options[i] = this._selection(el, selection)));
       return options;
       // Return a configured selection if given an object.
     } else if (options instanceof Object) {
@@ -366,8 +365,10 @@ export class Population {
    * @param {Population~SelectionOptions} selection - A selection of individuals to perform the operation with.
    * @returns {this}
    */
-  operation(operator, selection) {
-    Population.Operation[operator](this.selection(selection));
+  operation(operator, selection = true) {
+    operator =
+      operator instanceof Function ? operator : Population.Operation[operator];
+    return operator(this.individuals, this.selection(selection));
   }
 
   /*
@@ -411,15 +412,44 @@ export class Population {
   }
 }
 
+function selectionFilter(selection, filter = {}) {
+  if (!Array.isArray(selection)) filter[selection] = true;
+  else selection.forEach(selected => selectionFilter(selected, filter));
+  return filter;
+}
+
 /**
  * @typedef Population~Operation
  * @type {Function}
- * @param {Individual[]|Population} population - Population of individuals to be operated on.
+ * @param {Individual[]} individuals - Population of individuals to be operated on.
  * @param {Population~Selection} selection - The selection of the individuals used for the operation.
- * @returns {Individual[]|Population} - A shallow copy of the new population.
+ * @returns {Individual[]} - A list of individuals affected by the operation.
  */
 
-Population.Operation = {};
+Population.Operation = {
+  remove(individuals, selection) {
+    let filter = Object.keys(selectionFilter(selection));
+    let removed = [];
+    // Remove individuals in reverse order to preserve indices.
+    for (var i = filter.length - 1; i > -1; i--) {
+      removed.push(individuals[filter[i]]);
+      individuals.splice(filter[i], 1);
+    }
+    return removed;
+  },
+  duplicate(individuals, selection) {
+    let filter = Object.keys(selectionFilter(selection));
+    let duplicated = [];
+    // Duplicate individuals in reverse order to preserve indices.
+    for (var i = filter.length - 1; i > -1; i--) {
+      duplicated.push(individuals[filter[i]]);
+      // Place duplicated individuals in place directly after their copy.
+      individuals.splice(i+1, 0, new Individual(individuals[filter[i]]));
+    }
+    return duplicated;
+  },
+
+};
 
 /**
  * @typedef Population~Fitness

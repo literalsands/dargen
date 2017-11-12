@@ -346,6 +346,7 @@ describe("Population", () => {
           });
         });
       });
+
       describe("sort", () => {
         it("takes a sort object", () => {
           expect(() => {
@@ -360,8 +361,8 @@ describe("Population", () => {
               groups: 2,
               sort: { order: "ascending", fitness: "value" }
             });
-            expect(selection[0]).to.include.all.members([0, 1, 2, 3, 4])
-            expect(selection[1]).to.include.all.members([5, 6, 7, 8, 9])
+            expect(selection[0]).to.include.all.members([0, 1, 2, 3, 4]);
+            expect(selection[1]).to.include.all.members([5, 6, 7, 8, 9]);
           });
         });
       });
@@ -380,8 +381,8 @@ describe("Population", () => {
               groups: 2,
               shuffle: true
             });
-            expect(selection[0]).to.not.include.all.members([0, 1, 2, 3, 4])
-            expect(selection[1]).to.not.include.all.members([5, 6, 7, 8, 9])
+            expect(selection[0]).to.not.include.all.members([0, 1, 2, 3, 4]);
+            expect(selection[1]).to.not.include.all.members([5, 6, 7, 8, 9]);
           });
         });
       });
@@ -389,9 +390,104 @@ describe("Population", () => {
   });
 
   describe("operation", () => {
-    it("requires a string or function argument");
-    it("takes a selection or selection options");
-    it("returns a set of changed, removed, or inserted individuals");
+    it("requires a string or function argument", () => {
+      expect(() => {
+        population.operation(() => {});
+      }).not.to.throw(Error);
+      expect(() => {
+        population.operation("remove");
+      }).not.to.throw(Error);
+      expect(() => {
+        population.operation();
+      }).to.throw(Error);
+    });
+    it("takes a selection or selection options as the second argument", () => {
+      expect(() => {
+        // Remove three individuals at random.
+        population.operation("remove", { shuffle: true, size: 3 });
+      }).not.to.throw(Error);
+    });
+    it.skip("returns a set of removed individuals", () => {
+      let individuals = population.individuals.slice();
+      expect(population.operation("remove", true)).to.eql(individuals);
+      expect(population.operation("mutateAndReplace", true)).to.eql(
+        individuals
+      );
+      expect(population.operation("mutateAndDuplicate", true)).to.eql([]);
+    });
+    describe("default operators", () => {
+      describe("remove", () => {
+        it("removes selected individuals from the beginning", () => {
+          let individuals = population.individuals.slice(2);
+          population.operation("remove", [0, 1]);
+          expect(population.individuals).to.eql(individuals);
+        });
+        it("removes selection from the end", () => {
+          let individuals = population.individuals.slice(0, 5);
+          population.operation("remove", [5, 6, 7, 8, 9]);
+          expect(population.individuals).to.eql(individuals);
+        })
+        it("removes selection from the middle", () => {
+          let individuals = population.individuals.slice();
+          individuals.splice(4, 3);
+          population.operation("remove", [4, 5, 6]);
+          expect(population.individuals).to.eql(individuals);
+        })
+        it("removes selection out of order", () => {
+          let individuals = population.individuals.slice();
+          individuals.splice(6, 1);
+          individuals.splice(3, 1);
+          individuals.splice(2, 1);
+          individuals.splice(0, 1);
+          population.operation("remove", [3, 2, 0, 6]);
+          expect(population.individuals).to.eql(individuals);
+        })
+        it("ignores nesting in selection", () => {
+          let otherPopulation = new Population(population);
+          population.operation("remove", [[0], [1]]);
+          otherPopulation.operation("remove", [0, 1]);
+          expect(population).to.eql(otherPopulation);
+        });
+      });
+      describe("duplicate", () => {
+        it("duplicates selected individuals", () => {
+          let individuals = population.individuals;
+          individuals.splice(3, 1, individuals[2]);
+          population.operation("duplicate", [2]);
+          expect(population.individuals).to.eql(individuals);
+        });
+        it("ignores nesting in selection", () => {
+          let otherPopulation = new Population(population);
+          population.operation("duplicate", [[0], [1]]);
+          otherPopulation.operation("duplicate", [0, 1]);
+          expect(population).to.eql(otherPopulation);
+        });
+      });
+      describe("mutateAndReplace", () => {
+        it("mutates selected individuals");
+        it("mutates selected individuals in place");
+        it("ignores nesting");
+      });
+      describe("crossoverAndReplace", () => {
+        it(
+          "crosses selected individual with a matching selection of individuals"
+        );
+        it("crosses selected individuals and replaces the single parent");
+        it("expects two selections in an array");
+      });
+      describe("mutateAndPreserve", () => {
+        it("mutates selected individuals");
+        it("mutates selected individuals and adds them to the population");
+        it("ignores nesting");
+      });
+      describe("crossoverAndPreserve", () => {
+        it(
+          "crosses selected individual with a matching selection of individuals"
+        );
+        it("crosses selected individuals and adds them to the population");
+        it("expects two selections in an array");
+      });
+    });
   });
 
   describe("sort", () => {
