@@ -381,7 +381,7 @@ export class GenomeBase extends Array {
     // If mates is not in an Array or mates
     if (mates instanceof GenomeBase) mates = [mates];
     let {
-      selection = 1 - 1 / mates.length,
+      selection = 1 / (1 + mates.length),
       modify = false,
       average = false
     } = options;

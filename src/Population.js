@@ -330,7 +330,6 @@ export class Population {
    * @type {object}
    * @property {string|Population~Fitness} [value] - A function name on Population.Fitness or a function.
    * @property {string|Population~Comparison} [comparison] - A function name on Population.Compare or a comparison function for sorting.
-   * @property {('ascending'|'descending'|'random'|'asis')} [order='asis']
    * @property {*} [threshold] - A cutoff value for ascending or descending order. Selection proceding this value in the sorted list will be discarded.
    */
 
@@ -342,9 +341,29 @@ export class Population {
    * @param {string|Population~SelectionSortOptions} options - An options object.
    * @returns {Population~Selection} - Sorts the given selection or returns a new selection of the sorted individuals.
    */
-  sort(selection, options) {
+  sort(selection = [], options) {
+    let value, comparison, threshold;
+    ({ value = options || "value", comparison = "ascending", threshold } =
+      options instanceof Object ? options : {});
+    let fitness = value instanceof Function ? value : Population.Fitness[value];
+    let comparisonFunction =
+      comparison instanceof Function
+        ? comparison
+        : Population.Comparison[comparison];
     if (Array.isArray(selection)) {
+      if (Array.isArray(selection[0])) {
+        selection.forEach(group => this.sort(group, options))
+      } else {
+      let selected = selection.map(i => this.individuals[i]);
+      selection.sort((sa, sb) =>
+        comparisonFunction(
+          fitness(this.individuals[sa], selected, this.individuals),
+          fitness(this.individuals[sb], selected, this.individuals)
+        )
+      );
+      }
     }
+    return selection;
   }
 
   /**
@@ -442,24 +461,68 @@ Population.Operation = {
     let duplicated = [];
     // Duplicate individuals in reverse order to preserve indices.
     for (var i = filter.length - 1; i > -1; i--) {
+      console.log(filter[i])
       duplicated.push(individuals[filter[i]]);
       // Place duplicated individuals in place directly after their copy.
-      individuals.splice(i+1, 0, new Individual(individuals[filter[i]]));
+      individuals.splice(i + 1, 0, new Individual(individuals[filter[i]]));
     }
     return duplicated;
   },
-
+  mutateAndReplace(individuals, selection) {
+    Object.keys(selectionFilter(selection)).forEach(filter =>
+      individuals[filter].mutate()
+    );
+  },
+  mutateAndPreserve(individuals, selection) {
+    let filter = Object.keys(selectionFilter(selection));
+    let duplicated = [];
+    // Duplicate individuals in reverse order to preserve indices.
+    for (var i = filter.length - 1; i > -1; i--) {
+      duplicated.push(individuals[filter[i]]);
+      // Place duplicated individuals in place directly after their copy.
+      individuals.splice(
+        i + 1,
+        0,
+        new Individual(individuals[filter[i]]).mutate()
+      );
+    }
+    return duplicated;
+  },
+  crossoverAndReplace(individuals, [bearers, donors]) {
+    bearers.forEach((bearer, i) => {
+      individuals[bearer] = individuals[bearer].crossover(
+        ...[].concat(donors).map(parent => individuals[parent])
+      );
+    });
+  },
+  crossoverAndPreserve(individuals, [bearers, donors]) {
+    bearers.forEach((bearer, i) => {
+      individuals.splice(
+        bearer + 1,
+        0,
+        individuals[bearer].crossover(
+          ...[].concat(donors).map(parent => individuals[parent])
+        )
+      );
+    });
+  }
 };
 
 /**
  * @typedef Population~Fitness
  * @type {Function}
  * @param {Individual} individual - Individual to be evaluated.
- * @param {Individual|Individual[]} [competition] - Optional individual or group of individuals to be evaluated with.
+ * @param {Individual|Individual[]} [group] - Optional group of individuals to be evaluated with.
+ * @param {Individual|Individual[]} [groups] - Optional group of groups of individuals to be evaluated with.
  * @returns {*|*[]} A value or array of values to be consumed by a comparison function.
  */
 
-Population.Fitness = {};
+// TODO: This API would be a lot better if there were a clear way to assign fitness to more than the primary individual being evaluated, and there should be a clear way to persist fitness over time for an individual.
+Population.Fitness = {
+  value({ traits: { value } }) {
+    return value;
+  }
+};
 
 /**
  * @typedef Population~Comparison
@@ -469,4 +532,11 @@ Population.Fitness = {};
  * @returns {number}
  */
 
-Population.Comparison = {};
+Population.Comparison = {
+  ascending(a, b) {
+    return a - b;
+  },
+  descending(a, b) {
+    return b - a;
+  }
+};

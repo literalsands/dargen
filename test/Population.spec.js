@@ -348,10 +348,17 @@ describe("Population", () => {
       });
 
       describe("sort", () => {
-        it("takes a sort object", () => {
+        it("takes a sort options object", () => {
           expect(() => {
             population.selection({
-              sort: { order: "ascending", fitness: "value" }
+              sort: { comparison: "ascending", value: "value" }
+            });
+          }).to.not.throw(Error);
+        });
+        it("takes a string", () => {
+          expect(() => {
+            population.selection({
+              sort: "value"
             });
           }).to.not.throw(Error);
         });
@@ -359,7 +366,7 @@ describe("Population", () => {
           it("sorts fitness after grouping", () => {
             let selection = population.selection({
               groups: 2,
-              sort: { order: "ascending", fitness: "value" }
+              sort: { comparison: "ascending", value: "value" }
             });
             expect(selection[0]).to.include.all.members([0, 1, 2, 3, 4]);
             expect(selection[1]).to.include.all.members([5, 6, 7, 8, 9]);
@@ -466,7 +473,12 @@ describe("Population", () => {
       describe("mutateAndReplace", () => {
         it("mutates selected individuals");
         it("mutates selected individuals in place");
-        it("ignores nesting");
+        it.skip("ignores nesting in selection", () => {
+          let otherPopulation = new Population(population);
+          population.operation("mutateAndReplace", [[0], [1]]);
+          otherPopulation.operation("mutateAndReplace", [0, 1]);
+          expect(population).to.eql(otherPopulation);
+        });
       });
       describe("crossoverAndReplace", () => {
         it(
@@ -494,8 +506,12 @@ describe("Population", () => {
     it("is a function", () => {
       expect(population.sort).to.be.a("function");
     });
-    it("returns an array of individuals");
-    it("takes an options object");
+    it("returns an array of positions", () => {
+      expect(population.sort([0, 1, 2, 3, 4])).to.be.an('array')
+    });
+    it("takes an options object", () => {
+      expect(population.sort([0, 1, 2, 3, 4], {value: ({traits: {value}}) => value}))
+    });
   });
 
   describe("crossover", () => {

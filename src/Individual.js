@@ -224,8 +224,8 @@ export class Individual {
    * individual.mutate()
    */
   mutate() {
-    this.epigenome.mutate(this.traits.mutate, options => {
-      this.genome.mutate(options);
+    this.epigenome.mutate(this.traits.mutate, mutation => {
+      this.genome.mutate(mutation);
     });
     return this;
   }
@@ -257,14 +257,16 @@ export class Individual {
    * individual.crossover(...mates)
    */
   crossover(...mates) {
+    // Combine the genomes of all mates.
     var childGenome = this.genome.crossover(
       this.traits.crossover,
       mates.map(i => i.genome)
     );
-    // How do we decide the new generation? This might need to be called again, higher up.
     return new Individual({
       genome: childGenome,
+      // Give the child the phenotype of its bearing parent.
       phenotype: this.phenotype,
+      // Give the child knowledge of its parents.
       parents: mates.reduce(
         (parents, mate) => {
           parents.push(mate.identifier);
