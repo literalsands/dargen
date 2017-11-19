@@ -7,13 +7,13 @@ const PhenotypeHelpers = {
    * Use with 0 to 1 genomes.
    *
    * @function module:PhenotypeHelpers/choose
-   * @param {array} - Array to make choice from.
-   * @returns {function}
+   * @param {Array} choices - Array to make choice from.
+   * @returns {Function}
    */
   choose: function(arr) {
     if (!Array.isArray(arr)) throw TypeError("choose takes argument array");
     return function(unit) {
-      return unit === 1
+      return unit === Function
         ? arr[arr.length - 1]
         : arr[Math.floor(unit * arr.length)];
     };
@@ -23,9 +23,9 @@ const PhenotypeHelpers = {
    * This is just the starting size if using duplication and/or removal.
    *
    * @function module:PhenotypeHelpers/dynamic
-   * @param {integer} - Length or arity of the function.
-   * @param {function} - Function to set the length on.
-   * @returns {function}
+   * @param {integer} arity - Desired length or arity of the function.
+   * @param {Function} func - Function to set the length on.
+   * @returns {Function}
    */
   arity: function(length, func) {
     if (!(typeof length === "number" && func instanceof Function)) throw TypeError("arity takes arguments number and function")

@@ -36,11 +36,11 @@ export class Population {
     this._selections = [];
   }
 
-  /**
-   * Generate orphan individuals from a prototype individual.
-   */
   _generate(proto, n) {
-    // TODO: Make this an operator. This would make the constructor more predictable, and would encourage for the creation of prototype individuals after the initial population has been created.
+    /**
+     * Generate orphan individuals from a prototype individual.
+     * TODO: Make this an operator. This would make the constructor more predictable, and would encourage for the creation of prototype individuals after the initial population has been created.
+     */
     return Array.from(
       new Array(n),
       i => new Individual(proto && proto.__proto)
@@ -91,9 +91,8 @@ export class Population {
    * Some shorthand operations are available.
    *
    * @typedef Population~PipelineOperation
-   * @type {object}
    * @property {Population~SelectionOptions} [selection=true] - Base selection to apply operation to. Selects all if true.
-   * @property {Population~PipelineOperator} operation
+   * @property {Population~PipelineOperator} operation - Operation to apply to selection.
    * @property {Population~SelectionOptions} [mutate] - Applies mutate operation to selection. Given selection is taken from base selection. Mutate always occurs after crossover if together. Shorthand for the mutateAndReplace operation.
    * @property {Population~SelectionOptions[]} [crossover] - Applies crossover operation to selections, with the first selection being the "bearing" parent. Selections are taken from base selection. The shape and number of crossover children will be the same as that of the first selection. Shorthand for the crossoverAndReplace operation.
    * @property {Population~SelectionOptions} [duplicate] - Shorthand for the duplicate operation.
@@ -102,10 +101,9 @@ export class Population {
    */
 
   /**
-   * Evolve individuals of the population into the next generation.
-   * Applies manipulations to populations of individuals using manipulation pipelines and fitness functions.
-   *
    * @method evolve
+   * @summary Evolve individuals of the population into the next generation.
+   * @desc Applies manipulations to populations of individuals using manipulation pipelines and fitness functions.
    * @param {function|Population~Pipeline}  strategy - A function or description of operations to be performed on the population.
    * @returns {this}
    * @example
@@ -177,8 +175,8 @@ export class Population {
   /**
    * @typedef Population~SelectionOperator
    * @type {object}
-   * @property {string('inverse'|'union'|'intersection'|'difference')} operation
-   * @property {Population~SelectionOptions[]} selections - Invert the selection.
+   * @property {string} operation - A set operation to perform on the given selections. ("difference", "union", "intersection", "inversion")
+   * @property {Population~SelectionOptions[]} selections - Selections to perform set operation on.
    */
 
   /**
@@ -334,9 +332,8 @@ export class Population {
    */
 
   /**
-   * Return a population selection in an order based on fitness functions.
-   *
    * @method sort
+   * @desc Return a population selection in an order based on fitness functions.
    * @param {Population~Selection} selection - A selection to sort.
    * @param {string|Population~SelectionSortOptions} options - An options object.
    * @returns {Population~Selection} - Sorts the given selection or returns a new selection of the sorted individuals.
@@ -352,15 +349,15 @@ export class Population {
         : Population.Comparison[comparison];
     if (Array.isArray(selection)) {
       if (Array.isArray(selection[0])) {
-        selection.forEach(group => this.sort(group, options))
+        selection.forEach(group => this.sort(group, options));
       } else {
-      let selected = selection.map(i => this.individuals[i]);
-      selection.sort((sa, sb) =>
-        comparisonFunction(
-          fitness(this.individuals[sa], selected, this.individuals),
-          fitness(this.individuals[sb], selected, this.individuals)
-        )
-      );
+        let selected = selection.map(i => this.individuals[i]);
+        selection.sort((sa, sb) =>
+          comparisonFunction(
+            fitness(this.individuals[sa], selected, this.individuals),
+            fitness(this.individuals[sb], selected, this.individuals)
+          )
+        );
       }
     }
     return selection;
@@ -377,9 +374,8 @@ export class Population {
   stats() {}
 
   /**
-   * An operation is a function that takes a selection and performs an operation on the current population.
-   *
    * @method operation
+   * @desc An operation is a function that takes a selection and performs an operation on the current population.
    * @param {function|Population~PipelineOperator} operator - A function or function key on Population.Operation.
    * @param {Population~SelectionOptions} selection - A selection of individuals to perform the operation with.
    * @returns {this}
@@ -395,7 +391,8 @@ export class Population {
    */
 
   /**
-   * @method crossover - A shorthand function for operation "crossoverAndReplace."
+   * @method crossover
+   * @desc A shorthand function for operation "crossoverAndReplace."
    * @param {Population~SelectionOptions} selections - An array of selections or selection options. The first selection will be the "bearing" selection.
    * @returns {this}
    */
@@ -404,7 +401,8 @@ export class Population {
   }
 
   /**
-   * @method mutate - A shorthand function for operation "mutateAndReplace."
+   * @method mutate
+   * @desc A shorthand function for operation "mutateAndReplace."
    * @param {Population~SelectionOptions} selection
    * @returns {this}
    */
@@ -413,7 +411,8 @@ export class Population {
   }
 
   /**
-   * @method remove - A shorthand function for the operation "remove."
+   * @method remove
+   * @desc A shorthand function for the operation "remove."
    * @param {Population~SelectionOptions} selection
    * @returns {this}
    */
@@ -422,7 +421,8 @@ export class Population {
   }
 
   /**
-   * @method duplicate - A shorthand function for the operation "duplicate."
+   * @method duplicate
+   * @desc A shorthand function for the operation "duplicate."
    * @param {Population~SelectionOptions} selection
    * @returns {this}
    */
@@ -461,7 +461,7 @@ Population.Operation = {
     let duplicated = [];
     // Duplicate individuals in reverse order to preserve indices.
     for (var i = filter.length - 1; i > -1; i--) {
-      console.log(filter[i])
+      console.log(filter[i]);
       duplicated.push(individuals[filter[i]]);
       // Place duplicated individuals in place directly after their copy.
       individuals.splice(i + 1, 0, new Individual(individuals[filter[i]]));

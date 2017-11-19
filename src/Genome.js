@@ -74,7 +74,7 @@ Genome.Mutations = Object.assign({}, GenomeBase.Mutations, {
    * @param {Genome} genome
    * @param {integer[]} selection
    * @param {Object} params
-   * @param {Number} params.incrememt
+   * @param {Number} params.increment
    */
   increment(genome, selection, { min = 0, max = 1, increment }) {
     selection.forEach(index => {
