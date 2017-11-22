@@ -14,7 +14,7 @@ const PhenotypeHelpers = {
   choose: function(arr) {
     if (!Array.isArray(arr)) throw TypeError("choose takes argument array");
     return function(unit) {
-      return unit === Function
+      return unit === 1
         ? arr[arr.length - 1]
         : arr[Math.floor(unit * arr.length)];
     };
