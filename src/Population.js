@@ -59,7 +59,7 @@ export class Population {
   /**
    * Deeply copied, immutable population.
    *
-   * @returns Population - Frozen, deep copy of current population.
+   * @returns {Population} - Frozen, deep copy of current population.
    * @memberof Population
    */
   fossilize() {
@@ -102,6 +102,7 @@ export class Population {
 
   /**
    * @method evolve
+   * @memberof Population
    * @summary Evolve individuals of the population into the next generation.
    * @desc Applies manipulations to populations of individuals using manipulation pipelines and fitness functions.
    * @param {function|Population~Pipeline}  strategy - A function or description of operations to be performed on the population.
@@ -204,6 +205,7 @@ export class Population {
    * Select a list of individual indexes. This list can be nested in groups.
    *
    * @method selection
+   * @memberof Population
    * @param {Population~SelectionOptions} [options=true] - Options to create a selection or nested selection. Returns a complete selection by default.
    * @param {Population~Selection} [individuals] - Optional structured subset of the population to select from.
    * @returns {Population~Selection}
@@ -333,6 +335,7 @@ export class Population {
 
   /**
    * @method sort
+   * @memberof Population
    * @desc Return a population selection in an order based on fitness functions.
    * @param {Population~Selection} selection - A selection to sort.
    * @param {string|Population~SelectionSortOptions} options - An options object.
@@ -368,13 +371,14 @@ export class Population {
    * Stub function that could return some interesting statistics on the current population of individuals.
    * Ideas for the future include convergence, trait commonality, and generational fitness graphs.
    *
-   * @returns Object
+   * @returns {Object}
    * @memberof Population
    */
   stats() {}
 
   /**
    * @method operation
+   * @memberof Population
    * @desc An operation is a function that takes a selection and performs an operation on the current population.
    * @param {function|Population~PipelineOperator} operator - A function or function key on Population.Operation.
    * @param {Population~SelectionOptions} selection - A selection of individuals to perform the operation with.
@@ -392,6 +396,7 @@ export class Population {
 
   /**
    * @method crossover
+   * @memberof Population
    * @desc A shorthand function for operation "crossoverAndReplace."
    * @param {Population~SelectionOptions} selections - An array of selections or selection options. The first selection will be the "bearing" selection.
    * @returns {this}
@@ -402,6 +407,7 @@ export class Population {
 
   /**
    * @method mutate
+   * @memberof Population
    * @desc A shorthand function for operation "mutateAndReplace."
    * @param {Population~SelectionOptions} selection
    * @returns {this}
@@ -412,6 +418,7 @@ export class Population {
 
   /**
    * @method remove
+   * @memberof Population
    * @desc A shorthand function for the operation "remove."
    * @param {Population~SelectionOptions} selection
    * @returns {this}
@@ -422,6 +429,7 @@ export class Population {
 
   /**
    * @method duplicate
+   * @memberof Population
    * @desc A shorthand function for the operation "duplicate."
    * @param {Population~SelectionOptions} selection
    * @returns {this}
