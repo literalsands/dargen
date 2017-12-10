@@ -1,6 +1,6 @@
 import "babel-polyfill";
 import { should, expect } from "chai";
-import PhenotypeHelpers from "../src/PhenotypeHelpers";
+import * as PhenotypeHelpers from "../src/PhenotypeHelpers";
 
 describe("PhenotypeHelpers", () => {
   describe("choose", () => {
