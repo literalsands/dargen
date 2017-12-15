@@ -9,6 +9,9 @@
     "compile": "babel -d dist/ src/",
     "prepublishOnly": "npm run compile",
     "test": "mocha --compilers js:babel-core/register",
+    "example": "babel-node example.js",
+    "example:encode-word": "babel-node example.js",
+    "example:tic-tac-toe": "babel-node example-tictactoe.js",
     "test:tap": "npm run test -- --reporter=TAP",
     "test:examples": "mocha --compilers js:babel-core/register --require jsdoctest src/index.js",
     "docs:generate": "node_modules/.bin/jsdoc -c jsdoc.json"
